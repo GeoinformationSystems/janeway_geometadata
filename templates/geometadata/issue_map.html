@@ -1,0 +1,81 @@
+{% load static i18n %}
+{% if has_data %}
+<link rel="stylesheet" href="{% static 'geometadata/css/leaflet.css' %}" />
+<link rel="stylesheet" href="{% static 'geometadata/css/leaflet.fullscreen.css' %}" />
+<link rel="stylesheet" href="{% static 'geometadata/css/geometadata.css' %}" />
+<div class="geometadata-container" id="geometadata-issue-{{ issue.pk }}">
+    <h2 class="em">{% trans "Time and Location" %}</h2>
+
+    {% if show_issue_temporal and has_temporal %}
+    <div class="geometadata-temporal">
+        <strong>{% trans "Temporal Coverage" %}:</strong>
+        <span class="geometadata-dates">
+            {% if temporal_start and temporal_end %}
+                {{ temporal_start }} {% trans "to" %} {{ temporal_end }}
+            {% elif temporal_start %}
+                {% trans "From" %} {{ temporal_start }}
+            {% elif temporal_end %}
+                {% trans "Until" %} {{ temporal_end }}
+            {% endif %}
+        </span>
+    </div>
+    {% endif %}
+
+    {% if has_geometry %}
+    <div class="geometadata-spatial">
+        <div class="geometadata-map-container">
+            <div id="geometadata-map-issue-{{ issue.pk }}"
+                 class="geometadata-map"
+                 style="height: 300px; width: 100%;"
+                 data-geojson='{{ geojson_collection|safe }}'
+                 data-center-lat="0"
+                 data-center-lng="0"
+                 data-zoom="2"
+                 data-basemap-provider="{{ basemap_provider|default:'OpenStreetMap.Mapnik' }}"
+                 data-feature-colour="{{ feature_colour|default:'#3388ff' }}"
+                 data-feature-opacity="{{ feature_opacity|default:'0.7' }}"
+                 data-i18n-zoom-in="{% trans "Zoom in" %}"
+                 data-i18n-zoom-out="{% trans "Zoom out" %}"
+                 data-i18n-fullscreen="{% trans "Full Screen" %}"
+                 data-i18n-exit-fullscreen="{% trans "Exit Full Screen" %}"
+                 data-i18n-view="{% trans "View" %}"
+                 data-i18n-reset-view="{% trans "Reset map view" %}">
+            </div>
+            <p class="geometadata-reset-link">
+                <a href="#" id="geometadata-reset-issue-{{ issue.pk }}" class="small muted">{% trans "Reset map view" %}</a>
+            </p>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if show_download_geojson and has_geometry %}
+    <p class="geometadata-download">
+        <a href="{% url 'geometadata_download_issue' issue.pk %}"
+           class="geometadata-download-link">
+            <i class="fa fa-download"></i> {% trans "Download Geometadata (GeoJSON)" %}
+        </a>
+    </p>
+    {% endif %}
+</div>
+
+<script src="{% static 'geometadata/js/leaflet.js' %}"></script>
+<script src="{% static 'geometadata/js/leaflet-providers.js' %}"></script>
+<script src="{% static 'geometadata/js/leaflet.fullscreen.js' %}"></script>
+<script src="{% static 'geometadata/js/geometadata-display.js' %}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var mapResult = initGeometadataMap('geometadata-map-issue-{{ issue.pk }}');
+        // Reset map view link
+        var resetLink = document.getElementById('geometadata-reset-issue-{{ issue.pk }}');
+        if (resetLink && mapResult && mapResult.geoLayer) {
+            resetLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                var bounds = mapResult.geoLayer.getBounds();
+                if (bounds.isValid()) {
+                    mapResult.map.fitBounds(bounds, { padding: [20, 20] });
+                }
+            });
+        }
+    });
+</script>
+{% endif %}

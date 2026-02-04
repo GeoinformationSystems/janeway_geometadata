@@ -1,0 +1,1262 @@
+# German translations for the Janeway Geometadata plugin.
+# Copyright (C) 2025 TU Dresden / KOMET Project
+# This file is distributed under the same license as the geometadata plugin.
+# KOMET Team <komet@tu-dresden.de>, 2025.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: geometadata 0.1.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-01-01 00:00+0000\n"
+"PO-Revision-Date: 2025-01-01 00:00+0000\n"
+"Last-Translator: KOMET Team <komet@tu-dresden.de>\n"
+"Language-Team: German\n"
+"Language: de\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#
+# models.py
+#
+
+#: models.py
+msgid "Geometry (WKT)"
+msgstr "Geometrie (WKT)"
+
+#: models.py
+msgid ""
+"Geographic coverage in Well-Known Text (WKT) format. Example: POLYGON((-10 "
+"35, 40 35, 40 70, -10 70, -10 35))"
+msgstr ""
+"Geografische Abdeckung im Well-Known-Text-Format (WKT). Beispiel: "
+"POLYGON((-10 35, 40 35, 40 70, -10 70, -10 35))"
+
+#: models.py
+msgid "Bounding Box North"
+msgstr "Begrenzungsrahmen Nord"
+
+#: models.py
+msgid "Northern latitude boundary (-90 to 90)"
+msgstr "Nördliche Breitengradbegrenzung (-90 bis 90)"
+
+#: models.py
+msgid "Bounding Box South"
+msgstr "Begrenzungsrahmen Süd"
+
+#: models.py
+msgid "Southern latitude boundary (-90 to 90)"
+msgstr "Südliche Breitengradbegrenzung (-90 bis 90)"
+
+#: models.py
+msgid "Bounding Box East"
+msgstr "Begrenzungsrahmen Ost"
+
+#: models.py
+msgid "Eastern longitude boundary (-180 to 180)"
+msgstr "Östliche Längengradbegrenzung (-180 bis 180)"
+
+#: models.py
+msgid "Bounding Box West"
+msgstr "Begrenzungsrahmen West"
+
+#: models.py
+msgid "Western longitude boundary (-180 to 180)"
+msgstr "Westliche Längengradbegrenzung (-180 bis 180)"
+
+#: models.py
+msgid "Place Name"
+msgstr "Ortsname"
+
+#: models.py
+msgid ""
+"Human-readable name(s) of the location(s), e.g., 'Vienna, Austria' or "
+"'North Atlantic Ocean'"
+msgstr ""
+"Lesbare(r) Name(n) des/der Orte(s), z.B. 'Wien, Österreich' oder "
+"'Nordatlantik'"
+
+#: models.py
+msgid "Administrative Units"
+msgstr "Verwaltungseinheiten"
+
+#: models.py
+msgid ""
+"Comma-separated list of administrative units covering this geometry, e.g., "
+"'Austria, Vienna, Wien Stadt'"
+msgstr ""
+"Kommagetrennte Liste der Verwaltungseinheiten für diese Geometrie, z.B. "
+"'Österreich, Wien, Wien Stadt'"
+
+#: models.py
+msgid "Temporal Periods"
+msgstr "Zeiträume"
+
+#: models.py
+msgid ""
+"List of time periods, each as [start, end] text pairs. "
+"Example: [[\"2020-01\", \"2021-06\"], [\"Holocene\", \"\"]]"
+msgstr ""
+"Liste von Zeiträumen, jeweils als [Start, Ende]-Textpaare. "
+"Beispiel: [[\"2020-01\", \"2021-06\"], [\"Holozän\", \"\"]]"
+
+#: models.py
+msgid "Article"
+msgstr "Artikel"
+
+#: models.py
+msgid "Article Geometadata"
+msgstr "Artikel-Geometadaten"
+
+#: models.py
+msgid "Preprint"
+msgstr "Preprint"
+
+#: models.py
+msgid "Preprint Geometadata"
+msgstr "Preprint-Geometadaten"
+
+#
+# forms.py
+#
+
+#: forms.py
+msgid ""
+"Enter WKT geometry or use the map to draw. Example: POLYGON((-10 35, 40 35, "
+"40 70, -10 70, -10 35))"
+msgstr ""
+"WKT-Geometrie eingeben oder auf der Karte zeichnen. Beispiel: POLYGON((-10 "
+"35, 40 35, 40 70, -10 70, -10 35))"
+
+#: forms.py
+msgid "e.g., Vienna, Austria"
+msgstr "z.B. Wien, Österreich"
+
+#: forms.py
+msgid "Comma-separated administrative units"
+msgstr "Kommagetrennte Verwaltungseinheiten"
+
+#: forms.py
+msgid ""
+"Enter time periods as text. Recognised date formats: "
+"YYYY, YYYY-MM, YYYY-MM-DD (validated for ordering)."
+msgstr ""
+"Zeiträume als Text eingeben. Erkannte Datumsformate: "
+"JJJJ, JJJJ-MM, JJJJ-MM-TT (werden auf Reihenfolge geprüft)."
+
+#: forms.py
+msgid ""
+"Geographic coverage in Well-Known Text (WKT) format. You can draw on the "
+"map or enter WKT directly."
+msgstr ""
+"Geografische Abdeckung im Well-Known-Text-Format (WKT). Sie können auf der "
+"Karte zeichnen oder WKT direkt eingeben."
+
+#: forms.py
+msgid "Human-readable name(s) of the location(s) covered by this work."
+msgstr "Lesbare(r) Name(n) des/der von dieser Arbeit abgedeckten Orte(s)."
+
+#: forms.py
+msgid ""
+"Administrative units for machine-readable coverage (auto-populated when "
+"available)."
+msgstr ""
+"Verwaltungseinheiten für maschinenlesbare Abdeckung (wird automatisch "
+"ausgefüllt, wenn verfügbar)."
+
+#: forms.py
+msgid ""
+"Invalid WKT format. Must start with a valid geometry type: POINT, "
+"LINESTRING, POLYGON, MULTIPOINT, MULTILINESTRING, MULTIPOLYGON, or "
+"GEOMETRYCOLLECTION."
+msgstr ""
+"Ungültiges WKT-Format. Muss mit einem gültigen Geometrietyp beginnen: "
+"POINT, LINESTRING, POLYGON, MULTIPOINT, MULTILINESTRING, MULTIPOLYGON oder "
+"GEOMETRYCOLLECTION."
+
+#: forms.py
+msgid "Invalid WKT format: unbalanced parentheses."
+msgstr "Ungültiges WKT-Format: Klammern sind nicht ausgeglichen."
+
+#: forms.py
+msgid "Temporal periods must be a list."
+msgstr "Zeiträume müssen eine Liste sein."
+
+#: forms.py
+msgid "Period %(num)s must be a [start, end] pair."
+msgstr "Zeitraum %(num)s muss ein [Start, Ende]-Paar sein."
+
+#: forms.py
+msgid "Period %(num)s must have at least a start or end value."
+msgstr "Zeitraum %(num)s muss mindestens einen Start- oder Endwert haben."
+
+#: forms.py
+msgid "Period %(num)s: start must be before or equal to end."
+msgstr "Zeitraum %(num)s: Start muss vor oder gleich dem Ende liegen."
+
+#: forms.py
+msgid "Invalid JSON for temporal periods."
+msgstr "Ungültiges JSON für Zeiträume."
+
+#
+# views.py
+#
+
+#: views.py
+msgid "Settings saved successfully."
+msgstr "Einstellungen erfolgreich gespeichert."
+
+#: views.py
+msgid "Geometadata saved successfully."
+msgstr "Geometadaten erfolgreich gespeichert."
+
+#: views.py
+msgid "Article not found."
+msgstr "Artikel nicht gefunden."
+
+#: views.py
+msgid "Preprint not found."
+msgstr "Preprint nicht gefunden."
+
+#
+# templates/geometadata/edit_article.html
+# templates/geometadata/edit_preprint.html
+#
+
+#: templates/geometadata/edit_article.html
+#: templates/geometadata/edit_preprint.html
+msgid "Edit Geometadata"
+msgstr "Geometadaten bearbeiten"
+
+#: templates/geometadata/edit_article.html
+#: templates/geometadata/edit_preprint.html
+msgid "Geometadata"
+msgstr "Geometadaten"
+
+#: templates/geometadata/edit_article.html
+#: templates/geometadata/edit_preprint.html
+msgid "Spatial Coverage"
+msgstr "Räumliche Abdeckung"
+
+#: templates/geometadata/edit_article.html
+msgid ""
+"Define the geographic area(s) covered by this article. You can draw on the "
+"map or enter WKT geometry directly."
+msgstr ""
+"Definieren Sie die von diesem Artikel abgedeckten geografischen Gebiete. Sie "
+"können auf der Karte zeichnen oder WKT-Geometrie direkt eingeben."
+
+#: templates/geometadata/edit_preprint.html
+msgid ""
+"Define the geographic area(s) covered by this preprint. You can draw on the "
+"map or enter WKT geometry directly."
+msgstr ""
+"Definieren Sie die von diesem Preprint abgedeckten geografischen Gebiete. "
+"Sie können auf der Karte zeichnen oder WKT-Geometrie direkt eingeben."
+
+#: templates/geometadata/edit_article.html
+#: templates/geometadata/edit_preprint.html
+msgid "Temporal Coverage"
+msgstr "Zeitliche Abdeckung"
+
+#: templates/geometadata/edit_article.html
+msgid "Define the time period(s) covered by this article. Recognised date formats (YYYY, YYYY-MM, YYYY-MM-DD) are validated for ordering. Free text is also accepted (e.g. 'Holocene', 'Summer 2021')."
+msgstr "Definieren Sie die von diesem Artikel abgedeckten Zeiträume. Erkannte Datumsformate (JJJJ, JJJJ-MM, JJJJ-MM-TT) werden auf Reihenfolge geprüft. Freitext ist ebenfalls möglich (z.B. 'Holozän', 'Sommer 2021')."
+
+#: templates/geometadata/edit_preprint.html
+msgid "Define the time period(s) covered by this preprint. Recognised date formats (YYYY, YYYY-MM, YYYY-MM-DD) are validated for ordering. Free text is also accepted (e.g. 'Holocene', 'Summer 2021')."
+msgstr "Definieren Sie die von diesem Preprint abgedeckten Zeiträume. Erkannte Datumsformate (JJJJ, JJJJ-MM, JJJJ-MM-TT) werden auf Reihenfolge geprüft. Freitext ist ebenfalls möglich (z.B. 'Holozän', 'Sommer 2021')."
+
+#: templates/geometadata/edit_article.html
+#: templates/geometadata/edit_preprint.html
+msgid "Add Time Period"
+msgstr "Zeitraum hinzufügen"
+
+#: templates/geometadata/edit_article.html
+#: templates/geometadata/edit_preprint.html
+msgid "Save Geometadata"
+msgstr "Geometadaten speichern"
+
+#: templates/geometadata/edit_article.html
+msgid "Back to Article"
+msgstr "Zurück zum Artikel"
+
+#: templates/geometadata/edit_preprint.html
+msgid "Back to Preprint"
+msgstr "Zurück zum Preprint"
+
+#
+# templates/geometadata/article_map.html
+#
+
+#: templates/geometadata/article_map.html
+msgid "Time and Location"
+msgstr "Zeit und Ort"
+
+#: templates/geometadata/article_map.html
+msgid "to"
+msgstr "bis"
+
+#: templates/geometadata/article_map.html
+msgid "From"
+msgstr "Ab"
+
+#: templates/geometadata/article_map.html
+msgid "Until"
+msgstr "Bis"
+
+#: templates/geometadata/article_map.html
+msgid "Location"
+msgstr "Ort"
+
+#
+# templates/geometadata/manager.html
+#
+
+#: templates/geometadata/manager.html
+msgid "Geometadata Settings"
+msgstr "Geometadaten-Einstellungen"
+
+#: templates/geometadata/manager.html
+msgid "Geometadata Plugin Settings"
+msgstr "Geometadaten-Plugin-Einstellungen"
+
+#: templates/geometadata/manager.html
+msgid ""
+"Configure geospatial and temporal metadata collection and display for this "
+"journal/repository."
+msgstr ""
+"Konfigurieren Sie die Erfassung und Anzeige von raum-zeitlichen Metadaten "
+"für diese Zeitschrift/dieses Repositorium."
+
+#: templates/geometadata/manager.html
+msgid "General Settings"
+msgstr "Allgemeine Einstellungen"
+
+#: templates/geometadata/manager.html
+msgid "Enable Geometadata Collection"
+msgstr "Geometadaten-Erfassung aktivieren"
+
+#: templates/geometadata/manager.html
+msgid "Enable collection and display of geospatial/temporal metadata."
+msgstr "Erfassung und Anzeige von raum-zeitlichen Metadaten aktivieren."
+
+#: templates/geometadata/manager.html
+msgid "Enable Spatial Metadata"
+msgstr "Räumliche Metadaten aktivieren"
+
+#: templates/geometadata/manager.html
+msgid "Allow collection of geographic location/area metadata."
+msgstr "Erfassung von geografischen Orts-/Gebietsmetadaten erlauben."
+
+#: templates/geometadata/manager.html
+msgid "Enable Temporal Metadata"
+msgstr "Zeitliche Metadaten aktivieren"
+
+#: templates/geometadata/manager.html
+msgid "Allow collection of time period metadata."
+msgstr "Erfassung von Zeitraum-Metadaten erlauben."
+
+#: templates/geometadata/manager.html
+msgid "Enable Map Page"
+msgstr "Kartenseite aktivieren"
+
+#: templates/geometadata/manager.html
+msgid "Enable the aggregated map page for this journal/repository."
+msgstr "Aggregierte Kartenseite für diese Zeitschrift/dieses Repositorium aktivieren."
+
+#: templates/geometadata/manager.html
+msgid "Require Geometadata on Submission"
+msgstr "Geometadaten bei Einreichung erfordern"
+
+#: templates/geometadata/manager.html
+msgid "Require authors to provide geospatial metadata during submission."
+msgstr "Autoren müssen bei der Einreichung raum-zeitliche Metadaten angeben."
+
+#: templates/geometadata/manager.html
+msgid "Article Landing Page Display"
+msgstr "Anzeige auf Artikel-Landingpages"
+
+#: templates/geometadata/manager.html
+msgid "Show Map on Article Pages"
+msgstr "Karte auf Artikelseiten anzeigen"
+
+#: templates/geometadata/manager.html
+msgid "Display an interactive map on article/preprint pages."
+msgstr "Interaktive Karte auf Artikel-/Preprint-Seiten anzeigen."
+
+#: templates/geometadata/manager.html
+msgid "Show Temporal Coverage"
+msgstr "Zeitliche Abdeckung anzeigen"
+
+#: templates/geometadata/manager.html
+msgid "Display temporal coverage (date range) on article pages."
+msgstr "Zeitliche Abdeckung (Zeitraum) auf Artikelseiten anzeigen."
+
+#: templates/geometadata/manager.html
+msgid "Show Place Names"
+msgstr "Ortsnamen anzeigen"
+
+#: templates/geometadata/manager.html
+msgid "Display place name labels alongside the map."
+msgstr "Ortsnamen neben der Karte anzeigen."
+
+#: templates/geometadata/manager.html
+msgid "Issue Page Display"
+msgstr "Anzeige auf Ausgabenseiten"
+
+#: templates/geometadata/manager.html
+msgid "Show Temporal Coverage on Issue Pages"
+msgstr "Zeitliche Abdeckung auf Ausgabenseiten anzeigen"
+
+#: templates/geometadata/manager.html
+msgid "Display aggregated temporal coverage on issue landing pages."
+msgstr "Aggregierte zeitliche Abdeckung auf Ausgaben-Landingpages anzeigen."
+
+#: templates/geometadata/manager.html
+msgid "Enable List-Map Synchronization"
+msgstr "Listen-Karten-Synchronisierung aktivieren"
+
+#: templates/geometadata/manager.html
+msgid "Highlight articles when hovering over map features and vice versa."
+msgstr "Artikel hervorheben beim Überfahren von Kartenelementen und umgekehrt."
+
+#: plugin_settings.py
+msgid "Highlight articles when hovering over map features and vice versa on issue pages."
+msgstr "Artikel hervorheben beim Überfahren von Kartenelementen und umgekehrt auf Ausgabenseiten."
+
+#: templates/geometadata/manager.html
+msgid "Template Modifications Required"
+msgstr "Template-Anpassungen erforderlich"
+
+#: templates/geometadata/manager.html
+msgid "Some features require modifications to Janeway's theme templates that are not present in your installation. The following settings are disabled:"
+msgstr "Einige Funktionen erfordern Anpassungen an Janeways Theme-Templates, die in Ihrer Installation nicht vorhanden sind. Die folgenden Einstellungen sind deaktiviert:"
+
+#: templates/geometadata/manager.html
+msgid "Affected settings:"
+msgstr "Betroffene Einstellungen:"
+
+#: templates/geometadata/manager.html
+msgid "To enable these features, add the required hook calls to your theme templates. See the plugin documentation for details."
+msgstr "Um diese Funktionen zu aktivieren, fügen Sie die erforderlichen Hook-Aufrufe zu Ihren Theme-Templates hinzu. Details finden Sie in der Plugin-Dokumentation."
+
+#: templates/geometadata/manager.html
+msgid "Required hook:"
+msgstr "Erforderlicher Hook:"
+
+#: templates/geometadata/manager.html
+msgid "in"
+msgstr "in"
+
+#: templates/geometadata/manager.html
+msgid "These settings require the issue_footer_block hook which is not available in your theme templates."
+msgstr "Diese Einstellungen erfordern den issue_footer_block-Hook, der in Ihren Theme-Templates nicht verfügbar ist."
+
+#: templates/geometadata/manager.html
+msgid "Downloads"
+msgstr "Downloads"
+
+#: templates/geometadata/manager.html
+msgid "Show GeoJSON Download Links"
+msgstr "GeoJSON-Download-Links anzeigen"
+
+#: templates/geometadata/manager.html
+msgid "Show download links for geometadata in GeoJSON format on article and issue pages."
+msgstr "Download-Links für Geometadaten im GeoJSON-Format auf Artikel- und Ausgabenseiten anzeigen."
+
+#: templates/geometadata/article_map.html
+#: templates/geometadata/issue_map.html
+msgid "Download Geometadata (GeoJSON)"
+msgstr "Geometadaten herunterladen (GeoJSON)"
+
+#: templates/geometadata/manager.html
+msgid "HTML Metadata Embedding"
+msgstr "HTML-Metadaten-Einbettung"
+
+#: templates/geometadata/manager.html
+msgid "Control which metadata formats are embedded in the HTML source code of article pages for harvesters and search engines."
+msgstr "Steuern Sie, welche Metadatenformate im HTML-Quellcode der Artikelseiten für Harvester und Suchmaschinen eingebettet werden."
+
+#: templates/geometadata/manager.html
+msgid "Dublin Core Coverage"
+msgstr "Dublin-Core-Abdeckung"
+
+#: templates/geometadata/manager.html
+msgid "Embed DC.SpatialCoverage, DC.box, DC.temporal, and DC.PeriodOfTime meta tags."
+msgstr "DC.SpatialCoverage, DC.box, DC.temporal und DC.PeriodOfTime Meta-Tags einbetten."
+
+#: templates/geometadata/manager.html
+msgid "geo.* Meta Tags"
+msgstr "geo.*-Meta-Tags"
+
+#: templates/geometadata/manager.html
+msgid "Embed geo.placename meta tags."
+msgstr "geo.placename-Meta-Tags einbetten."
+
+#: templates/geometadata/manager.html
+msgid "Schema.org Coverage (JSON-LD)"
+msgstr "Schema.org-Abdeckung (JSON-LD)"
+
+#: templates/geometadata/manager.html
+msgid "Embed Schema.org spatialCoverage and temporalCoverage as JSON-LD."
+msgstr "Schema.org spatialCoverage und temporalCoverage als JSON-LD einbetten."
+
+#: templates/geometadata/manager.html
+msgid "GeoJSON Link Element"
+msgstr "GeoJSON-Link-Element"
+
+#: templates/geometadata/manager.html
+msgid "Include a link to the GeoJSON API endpoint in the HTML head."
+msgstr "Link zum GeoJSON-API-Endpunkt im HTML-Head einfügen."
+
+#: templates/geometadata/manager.html
+msgid "Map Colour Coding"
+msgstr "Farbcodierung auf Karten"
+
+#: templates/geometadata/manager.html
+msgid "Colour-code geometries on aggregated maps (journal and press map pages) by issue or journal."
+msgstr "Geometrien auf aggregierten Karten (Zeitschriften- und Verlagskartenseiten) nach Ausgabe oder Zeitschrift farblich kennzeichnen."
+
+#: templates/geometadata/manager.html
+msgid "Enable Colour Coding"
+msgstr "Farbcodierung aktivieren"
+
+#: templates/geometadata/manager.html
+msgid "Assign colours to markers and geometries based on their grouping (issue on journal maps, journal on press maps)."
+msgstr "Marker und Geometrien anhand ihrer Gruppierung farblich zuordnen (Ausgabe auf Zeitschriftskarten, Zeitschrift auf Verlagskarten)."
+
+#: templates/geometadata/manager.html
+msgid "Colour Scheme"
+msgstr "Farbschema"
+
+#: templates/geometadata/manager.html
+msgid "Colour palette from"
+msgstr "Farbpalette von"
+
+#: templates/geometadata/manager.html
+msgid "Qualitative schemes (Set1, Set2, Dark2) are recommended."
+msgstr "Qualitative Schemata (Set1, Set2, Dark2) werden empfohlen."
+
+#: templates/geometadata/manager.html
+msgid "Map Basemap"
+msgstr "Karten-Hintergrundkarte"
+
+#: templates/geometadata/manager.html
+msgid "Select a basemap for all maps in this journal/repository. These basemaps are free to use without registration."
+msgstr "Wählen Sie eine Hintergrundkarte für alle Karten in dieser Zeitschrift/diesem Repositorium. Diese Hintergrundkarten sind kostenlos und ohne Registrierung nutzbar."
+
+#: templates/geometadata/manager.html
+msgid "Preview all available basemaps"
+msgstr "Alle verfügbaren Hintergrundkarten ansehen"
+
+#: templates/geometadata/manager.html
+msgid "Basemap Provider"
+msgstr "Hintergrundkarten-Anbieter"
+
+#: templates/geometadata/manager.html
+msgid "Attribution Preview"
+msgstr "Attributionsvorschau"
+
+#: templates/geometadata/manager.html
+msgid "This attribution text will be shown on all maps."
+msgstr "Dieser Attributionstext wird auf allen Karten angezeigt."
+
+#: templates/geometadata/manager.html
+msgid "Default Map Settings"
+msgstr "Standard-Karteneinstellungen"
+
+#: templates/geometadata/manager.html
+msgid "Default Latitude"
+msgstr "Standard-Breitengrad"
+
+#: templates/geometadata/manager.html
+msgid "Default center latitude (-90 to 90)"
+msgstr "Standard-Breitengrad für Kartenmitte (-90 bis 90)"
+
+#: templates/geometadata/manager.html
+msgid "Default Longitude"
+msgstr "Standard-Längengrad"
+
+#: templates/geometadata/manager.html
+msgid "Default center longitude (-180 to 180)"
+msgstr "Standard-Längengrad für Kartenmitte (-180 bis 180)"
+
+#: templates/geometadata/manager.html
+msgid "Default Zoom Level"
+msgstr "Standard-Zoomstufe"
+
+#: templates/geometadata/manager.html
+msgid "Default zoom level (1-18)"
+msgstr "Standard-Zoomstufe (1-18)"
+
+#: templates/geometadata/manager.html
+msgid "Save Settings"
+msgstr "Einstellungen speichern"
+
+#: templates/geometadata/manager.html
+msgid "Data Privacy and Tile Servers"
+msgstr "Datenschutz und Kachelserver"
+
+#: templates/geometadata/manager.html
+msgid "When maps are displayed, the user's browser connects directly to an external tile server to load map images. No map tile data is proxied through this server."
+msgstr "Wenn Karten angezeigt werden, verbindet sich der Browser des Nutzers direkt mit einem externen Kachelserver, um Kartenbilder zu laden. Es werden keine Kartenkacheldaten über diesen Server weitergeleitet."
+
+#: templates/geometadata/manager.html
+msgid "The tile provider receives the user's IP address, browser user agent, and the geographic extent of the requested map area."
+msgstr "Der Kachelanbieter erhält die IP-Adresse, den Browser-User-Agent und den geografischen Ausschnitt des angeforderten Kartenbereichs."
+
+#: templates/geometadata/manager.html
+msgid "Default tile server:"
+msgstr "Standard-Kachelserver:"
+
+#: templates/geometadata/manager.html
+msgid "Privacy policy:"
+msgstr "Datenschutzrichtlinie:"
+
+#: templates/geometadata/manager.html
+msgid "Tile usage policy:"
+msgstr "Nutzungsrichtlinie für Kacheln:"
+
+#: templates/geometadata/manager.html
+msgid "If your journal displays maps to visitors, your data privacy statement should inform users about the external tile service connection. If you use a custom tile provider, update the privacy statement to reference that provider instead."
+msgstr "Wenn Ihre Zeitschrift Karten für Besucher anzeigt, sollte Ihre Datenschutzerklärung die Nutzer über die externe Kachelserver-Verbindung informieren. Wenn Sie einen benutzerdefinierten Kachelanbieter verwenden, aktualisieren Sie die Datenschutzerklärung entsprechend."
+
+#: templates/geometadata/manager.html
+msgid "Statistics"
+msgstr "Statistiken"
+
+#: templates/geometadata/manager.html
+msgid "Articles with Geometadata"
+msgstr "Artikel mit Geometadaten"
+
+#: templates/geometadata/manager.html
+msgid "Preprints with Geometadata"
+msgstr "Preprints mit Geometadaten"
+
+#
+# templates/geometadata/map_page.html
+#
+
+#: templates/geometadata/map_page.html
+#: templates/geometadata/nav_link.html
+msgid "Map"
+msgstr "Karte"
+
+#: templates/geometadata/map_page.html
+msgid "Geographic Coverage Map"
+msgstr "Karte der geografischen Abdeckung"
+
+#: templates/geometadata/map_page.html
+msgid ""
+"This map shows the geographic coverage of all articles and preprints across "
+"all journals and repositories."
+msgstr ""
+"Diese Karte zeigt die geografische Abdeckung aller Artikel und Preprints "
+"über alle Zeitschriften und Repositorien hinweg."
+
+#: templates/geometadata/map_page.html
+msgid ""
+"This map shows the geographic coverage of all articles/preprints with "
+"location metadata."
+msgstr ""
+"Diese Karte zeigt die geografische Abdeckung aller Artikel/Preprints mit "
+"Standort-Metadaten."
+
+#: templates/geometadata/map_page.html
+msgid "Loading map data..."
+msgstr "Kartendaten werden geladen..."
+
+#: templates/geometadata/map_page.html
+msgid "View"
+msgstr "Anzeigen"
+
+#: templates/geometadata/map_page.html
+msgid "No articles with geographic metadata found."
+msgstr "Keine Artikel mit geografischen Metadaten gefunden."
+
+#: templates/geometadata/map_page.html
+msgid "Error loading map data."
+msgstr "Fehler beim Laden der Kartendaten."
+
+#
+# templates/geometadata/curation_queue.html
+#
+
+#: templates/geometadata/curation_queue.html
+msgid "Curation Queue"
+msgstr "Kurationswarteschlange"
+
+#: templates/geometadata/curation_queue.html
+msgid "Work through articles and add missing geospatial/temporal metadata. Articles with existing geometadata are marked with a green check."
+msgstr "Arbeiten Sie Artikel durch und fügen Sie fehlende raum-zeitliche Metadaten hinzu. Artikel mit vorhandenen Geometadaten sind mit einem grünen Häkchen markiert."
+
+#: templates/geometadata/triage.html
+msgid "Progress"
+msgstr "Fortschritt"
+
+#: templates/geometadata/triage.html
+msgid "Show All"
+msgstr "Alle anzeigen"
+
+#: templates/geometadata/triage.html
+msgid "Hide Completed"
+msgstr "Erledigte ausblenden"
+
+#: templates/geometadata/triage.html
+msgid "Status"
+msgstr "Status"
+
+#: templates/geometadata/triage.html
+msgid "Title"
+msgstr "Titel"
+
+#: templates/geometadata/triage.html
+msgid "Stage"
+msgstr "Phase"
+
+#: templates/geometadata/triage.html
+msgid "Published"
+msgstr "Veröffentlicht"
+
+#: templates/geometadata/triage.html
+msgid "Has geometadata"
+msgstr "Hat Geometadaten"
+
+#: templates/geometadata/triage.html
+msgid "Missing geometadata"
+msgstr "Fehlende Geometadaten"
+
+#: templates/geometadata/triage.html
+msgid "Edit"
+msgstr "Bearbeiten"
+
+#: templates/geometadata/triage.html
+msgid "Previous"
+msgstr "Zurück"
+
+#: templates/geometadata/triage.html
+msgid "Next"
+msgstr "Weiter"
+
+#: templates/geometadata/triage.html
+msgid "All articles have geometadata. Nothing left to curate."
+msgstr "Alle Artikel haben Geometadaten. Nichts mehr zu kuratieren."
+
+#: templates/geometadata/triage.html
+msgid "No articles found."
+msgstr "Keine Artikel gefunden."
+
+#: templates/geometadata/manager.html
+msgid "Colour Method"
+msgstr "Farbmethode"
+
+#: templates/geometadata/manager.html
+msgid "Generate Palette"
+msgstr "Palette generieren"
+
+#: templates/geometadata/manager.html
+msgid "Generates colours for twice the current number of map groups (issues or journals), using the journal/repository name as seed."
+msgstr "Erzeugt Farben für die doppelte Anzahl der aktuellen Kartengruppen (Ausgaben oder Zeitschriften), unter Verwendung des Zeitschriften-/Repositoriumsnamens als Startwert."
+
+#: templates/geometadata/manager.html
+msgid "Palette by"
+msgstr "Palette von"
+
+#
+# Leaflet map UI i18n
+#
+
+#: templates/geometadata/article_map.html
+#: templates/geometadata/issue_map.html
+msgid "Reset map view"
+msgstr "Kartenansicht zurücksetzen"
+
+#: templates/geometadata/article_map.html
+#: templates/geometadata/issue_map.html
+#: templates/geometadata/edit_article.html
+#: templates/geometadata/edit_preprint.html
+#: templates/geometadata/map_page.html
+msgid "Zoom in"
+msgstr "Vergrößern"
+
+#: templates/geometadata/article_map.html
+#: templates/geometadata/issue_map.html
+#: templates/geometadata/edit_article.html
+#: templates/geometadata/edit_preprint.html
+#: templates/geometadata/map_page.html
+msgid "Zoom out"
+msgstr "Verkleinern"
+
+#: templates/geometadata/article_map.html
+#: templates/geometadata/issue_map.html
+#: templates/geometadata/edit_article.html
+#: templates/geometadata/edit_preprint.html
+#: templates/geometadata/map_page.html
+msgid "Full Screen"
+msgstr "Vollbild"
+
+#: templates/geometadata/article_map.html
+#: templates/geometadata/issue_map.html
+#: templates/geometadata/edit_article.html
+#: templates/geometadata/edit_preprint.html
+#: templates/geometadata/map_page.html
+msgid "Exit Full Screen"
+msgstr "Vollbild beenden"
+
+#: templates/geometadata/map_page.html
+msgid "Untitled"
+msgstr "Ohne Titel"
+
+#
+# Leaflet.draw toolbar i18n
+#
+
+#: templates/geometadata/edit_article.html
+#: templates/geometadata/edit_preprint.html
+msgid "Cancel drawing"
+msgstr "Zeichnung abbrechen"
+
+#: templates/geometadata/edit_article.html
+#: templates/geometadata/edit_preprint.html
+msgid "Cancel"
+msgstr "Abbrechen"
+
+#: templates/geometadata/edit_article.html
+#: templates/geometadata/edit_preprint.html
+msgid "Finish drawing"
+msgstr "Zeichnung abschließen"
+
+#: templates/geometadata/edit_article.html
+#: templates/geometadata/edit_preprint.html
+msgid "Finish"
+msgstr "Fertig"
+
+#: templates/geometadata/edit_article.html
+#: templates/geometadata/edit_preprint.html
+msgid "Delete last point drawn"
+msgstr "Letzten gezeichneten Punkt löschen"
+
+#: templates/geometadata/edit_article.html
+#: templates/geometadata/edit_preprint.html
+msgid "Delete last point"
+msgstr "Letzten Punkt löschen"
+
+#: templates/geometadata/edit_article.html
+#: templates/geometadata/edit_preprint.html
+msgid "Draw a polyline"
+msgstr "Linie zeichnen"
+
+#: templates/geometadata/edit_article.html
+#: templates/geometadata/edit_preprint.html
+msgid "Draw a polygon"
+msgstr "Polygon zeichnen"
+
+#: templates/geometadata/edit_article.html
+#: templates/geometadata/edit_preprint.html
+msgid "Draw a rectangle"
+msgstr "Rechteck zeichnen"
+
+#: templates/geometadata/edit_article.html
+#: templates/geometadata/edit_preprint.html
+msgid "Draw a circle"
+msgstr "Kreis zeichnen"
+
+#: templates/geometadata/edit_article.html
+#: templates/geometadata/edit_preprint.html
+msgid "Draw a marker"
+msgstr "Markierung setzen"
+
+#: templates/geometadata/edit_article.html
+#: templates/geometadata/edit_preprint.html
+msgid "Draw a circle marker"
+msgstr "Kreismarkierung setzen"
+
+#: templates/geometadata/edit_article.html
+#: templates/geometadata/edit_preprint.html
+msgid "Click and drag to draw circle."
+msgstr "Klicken und ziehen, um einen Kreis zu zeichnen."
+
+#: templates/geometadata/edit_article.html
+#: templates/geometadata/edit_preprint.html
+msgid "Click map to place circle marker."
+msgstr "Auf die Karte klicken, um Kreismarkierung zu setzen."
+
+#: templates/geometadata/edit_article.html
+#: templates/geometadata/edit_preprint.html
+msgid "Click map to place marker."
+msgstr "Auf die Karte klicken, um Markierung zu setzen."
+
+#: templates/geometadata/edit_article.html
+#: templates/geometadata/edit_preprint.html
+msgid "Click to start drawing shape."
+msgstr "Klicken, um Form zu zeichnen."
+
+#: templates/geometadata/edit_article.html
+#: templates/geometadata/edit_preprint.html
+msgid "Click to continue drawing shape."
+msgstr "Klicken, um Form weiterzuzeichnen."
+
+#: templates/geometadata/edit_article.html
+#: templates/geometadata/edit_preprint.html
+msgid "Click first point to close this shape."
+msgstr "Ersten Punkt anklicken, um die Form zu schließen."
+
+#: templates/geometadata/edit_article.html
+#: templates/geometadata/edit_preprint.html
+msgid "Click to start drawing line."
+msgstr "Klicken, um Linie zu zeichnen."
+
+#: templates/geometadata/edit_article.html
+#: templates/geometadata/edit_preprint.html
+msgid "Click to continue drawing line."
+msgstr "Klicken, um Linie weiterzuzeichnen."
+
+#: templates/geometadata/edit_article.html
+#: templates/geometadata/edit_preprint.html
+msgid "Click last point to finish line."
+msgstr "Letzten Punkt anklicken, um Linie abzuschließen."
+
+#: templates/geometadata/edit_article.html
+#: templates/geometadata/edit_preprint.html
+msgid "Click and drag to draw rectangle."
+msgstr "Klicken und ziehen, um ein Rechteck zu zeichnen."
+
+#: templates/geometadata/edit_article.html
+#: templates/geometadata/edit_preprint.html
+msgid "Release mouse to finish drawing."
+msgstr "Maustaste loslassen, um Zeichnung abzuschließen."
+
+#: templates/geometadata/edit_article.html
+#: templates/geometadata/edit_preprint.html
+msgid "Save changes"
+msgstr "Änderungen speichern"
+
+#: templates/geometadata/edit_article.html
+#: templates/geometadata/edit_preprint.html
+msgid "Save"
+msgstr "Speichern"
+
+#: templates/geometadata/edit_article.html
+#: templates/geometadata/edit_preprint.html
+msgid "Cancel editing, discards all changes"
+msgstr "Bearbeitung abbrechen, alle Änderungen verwerfen"
+
+#: templates/geometadata/edit_article.html
+#: templates/geometadata/edit_preprint.html
+msgid "Clear all layers"
+msgstr "Alle Ebenen löschen"
+
+#: templates/geometadata/edit_article.html
+#: templates/geometadata/edit_preprint.html
+msgid "Clear All"
+msgstr "Alle löschen"
+
+#: templates/geometadata/edit_article.html
+#: templates/geometadata/edit_preprint.html
+msgid "Edit layers"
+msgstr "Ebenen bearbeiten"
+
+#: templates/geometadata/edit_article.html
+#: templates/geometadata/edit_preprint.html
+msgid "No layers to edit"
+msgstr "Keine Ebenen zum Bearbeiten"
+
+#: templates/geometadata/edit_article.html
+#: templates/geometadata/edit_preprint.html
+msgid "Delete layers"
+msgstr "Ebenen löschen"
+
+#: templates/geometadata/edit_article.html
+#: templates/geometadata/edit_preprint.html
+msgid "No layers to delete"
+msgstr "Keine Ebenen zum Löschen"
+
+#: templates/geometadata/edit_article.html
+#: templates/geometadata/edit_preprint.html
+msgid "Drag handles or markers to edit features."
+msgstr "Griffe oder Markierungen ziehen, um Objekte zu bearbeiten."
+
+#: templates/geometadata/edit_article.html
+#: templates/geometadata/edit_preprint.html
+msgid "Click cancel to undo changes."
+msgstr "Abbrechen klicken, um Änderungen rückgängig zu machen."
+
+#: templates/geometadata/edit_article.html
+#: templates/geometadata/edit_preprint.html
+msgid "Click on a feature to remove."
+msgstr "Auf ein Objekt klicken, um es zu entfernen."
+
+#
+# Temporal periods UI i18n
+#
+
+#: templates/geometadata/edit_article.html
+#: templates/geometadata/edit_preprint.html
+msgid "Start"
+msgstr "Start"
+
+#: templates/geometadata/edit_article.html
+#: templates/geometadata/edit_preprint.html
+msgid "End"
+msgstr "Ende"
+
+#: templates/geometadata/edit_article.html
+#: templates/geometadata/edit_preprint.html
+msgid "Start (e.g. 2020-01, Holocene)"
+msgstr "Start (z.B. 2020-01, Holozän)"
+
+#: templates/geometadata/edit_article.html
+#: templates/geometadata/edit_preprint.html
+msgid "End (e.g. 2021-06)"
+msgstr "Ende (z.B. 2021-06)"
+
+#: templates/geometadata/edit_article.html
+#: templates/geometadata/edit_preprint.html
+msgid "Remove"
+msgstr "Entfernen"
+
+#
+# Reverse geocoding
+#
+
+#: templates/geometadata/edit_article.html
+#: templates/geometadata/edit_preprint.html
+msgid "Lookup Location Names"
+msgstr "Ortsnamen nachschlagen"
+
+#: templates/geometadata/edit_article.html
+#: templates/geometadata/edit_preprint.html
+msgid "Automatically derive place names and administrative units from the drawn geometry via reverse geocoding."
+msgstr "Ortsnamen und Verwaltungseinheiten automatisch aus der gezeichneten Geometrie per Rückwärts-Geokodierung ableiten."
+
+#: templates/geometadata/edit_article.html
+#: templates/geometadata/edit_preprint.html
+msgid "Please draw a geometry on the map first."
+msgstr "Bitte zeichnen Sie zuerst eine Geometrie auf der Karte."
+
+#: templates/geometadata/edit_article.html
+#: templates/geometadata/edit_preprint.html
+msgid "Place name or administrative units already have values. Overwrite?"
+msgstr "Ortsname oder Verwaltungseinheiten haben bereits Werte. Überschreiben?"
+
+#: templates/geometadata/edit_article.html
+#: templates/geometadata/edit_preprint.html
+msgid "Looking up..."
+msgstr "Wird nachgeschlagen..."
+
+#: templates/geometadata/edit_article.html
+#: templates/geometadata/edit_preprint.html
+msgid "Location names updated."
+msgstr "Ortsnamen aktualisiert."
+
+#: templates/geometadata/edit_article.html
+#: templates/geometadata/edit_preprint.html
+msgid "Geocoding failed. Please try again later."
+msgstr "Geokodierung fehlgeschlagen. Bitte versuchen Sie es später erneut."
+
+#: views.py
+msgid "Reverse geocoding is disabled."
+msgstr "Rückwärts-Geokodierung ist deaktiviert."
+
+#: views.py
+msgid "Invalid JSON."
+msgstr "Ungültiges JSON."
+
+#: views.py
+msgid "No WKT geometry provided."
+msgstr "Keine WKT-Geometrie angegeben."
+
+#: templates/geometadata/manager.html
+msgid "Reverse Geocoding"
+msgstr "Rückwärts-Geokodierung"
+
+#: templates/geometadata/manager.html
+msgid "Allow editors to automatically derive place names and administrative units from drawn geometries."
+msgstr "Redakteuren erlauben, Ortsnamen und Verwaltungseinheiten automatisch aus gezeichneten Geometrien abzuleiten."
+
+#: templates/geometadata/manager.html
+msgid "Enable Reverse Geocoding"
+msgstr "Rückwärts-Geokodierung aktivieren"
+
+#: templates/geometadata/manager.html
+msgid "Geocoding Provider"
+msgstr "Geokodierungs-Anbieter"
+
+#: templates/geometadata/manager.html
+msgid "User Agent"
+msgstr "User-Agent"
+
+#: templates/geometadata/manager.html
+msgid "Identifies your instance to Nominatim/Photon."
+msgstr "Identifiziert Ihre Instanz gegenüber Nominatim/Photon."
+
+#: templates/geometadata/manager.html
+msgid "GeoNames Username"
+msgstr "GeoNames-Benutzername"
+
+#: templates/geometadata/manager.html
+msgid "Required for GeoNames provider."
+msgstr "Erforderlich für den GeoNames-Anbieter."
+
+#: templates/geometadata/manager.html
+msgid "Register"
+msgstr "Registrieren"
+
+
+#: templates/geometadata/manager.html
+msgid "Species & Factions"
+msgstr "Spezies & Fraktionen"
+
+#: templates/geometadata/manager.html
+msgid "Alert Modes"
+msgstr "Alarmstufen"
+
+#: templates/geometadata/manager.html
+msgid "Colour Space"
+msgstr "Farbraum"
+
+#: templates/geometadata/manager.html
+msgid "Default (All Colours)"
+msgstr "Standard (Alle Farben)"
+
+#: templates/geometadata/manager.html
+msgid "Colorblind Friendly"
+msgstr "Farbenblind-freundlich"
+
+#: templates/geometadata/manager.html
+msgid "Fancy Light (Pastel)"
+msgstr "Fancy Hell (Pastell)"
+
+#: templates/geometadata/manager.html
+msgid "Fancy Dark"
+msgstr "Fancy Dunkel"
+
+#: templates/geometadata/manager.html
+msgid "Shades"
+msgstr "Schattierungen"
+
+#: templates/geometadata/manager.html
+msgid "Tarnish"
+msgstr "Angelaufen"
+
+#: templates/geometadata/manager.html
+msgid "Pastel"
+msgstr "Pastell"
+
+#: templates/geometadata/manager.html
+msgid "Intense"
+msgstr "Intensiv"
+
+#: templates/geometadata/manager.html
+msgid "Fluorescent"
+msgstr "Fluoreszierend"
+
+#: templates/geometadata/manager.html
+msgid "Red Roses"
+msgstr "Rote Rosen"
+
+#: templates/geometadata/manager.html
+msgid "Ochre Sand"
+msgstr "Ockersand"
+
+#: templates/geometadata/manager.html
+msgid "Yellow Lime"
+msgstr "Gelb-Limette"
+
+#: templates/geometadata/manager.html
+msgid "Green Mint"
+msgstr "Grüne Minze"
+
+#: templates/geometadata/manager.html
+msgid "Ice Cube"
+msgstr "Eiswürfel"
+
+#: templates/geometadata/manager.html
+msgid "Blue Ocean"
+msgstr "Blauer Ozean"
+
+#: templates/geometadata/manager.html
+msgid "Indigo Night"
+msgstr "Indigonacht"
+
+#: templates/geometadata/manager.html
+msgid "Purple Wine"
+msgstr "Lila Wein"
+
+#: templates/geometadata/manager.html
+msgid "Palettes from:"
+msgstr "Paletten von:"
+
+#: templates/geometadata/manager.html
+msgid "A colour palette already exists. Replacing it will lose the current colours. Continue?"
+msgstr "Es existiert bereits eine Farbpalette. Beim Ersetzen gehen die aktuellen Farben verloren. Fortfahren?"
+
+#: templates/geometadata/manager.html
+msgid "Map Settings"
+msgstr "Karteneinstellungen"
+
+#: templates/geometadata/manager.html
+msgid "Configure the basemap and default view for all maps in this journal/repository."
+msgstr "Konfigurieren Sie die Basiskarte und Standardansicht für alle Karten in dieser Zeitschrift/diesem Repository."
+
+#: templates/geometadata/manager.html
+msgid "Map Preview"
+msgstr "Kartenvorschau"
+
+#: templates/geometadata/manager.html
+msgid "Preview of the default map view. Changing settings above updates this preview."
+msgstr "Vorschau der Standardkartenansicht. Änderungen an den Einstellungen oben aktualisieren diese Vorschau."
+
+#: templates/geometadata/manager.html
+msgid "The privacy information below applies to the default basemap (OpenStreetMap). If you select a different basemap provider in the Map Settings above, you must research and reference the appropriate privacy policy for that provider."
+msgstr "Die untenstehenden Datenschutzinformationen gelten für die Standard-Basiskarte (OpenStreetMap). Wenn Sie einen anderen Kartenanbieter in den Karteneinstellungen oben auswählen, müssen Sie die entsprechende Datenschutzrichtlinie dieses Anbieters recherchieren und referenzieren."
+
+#: templates/geometadata/manager.html
+msgid "The attribution text shown in the Map Settings section can help identify the tile provider and find their privacy documentation."
+msgstr "Der Attributionstext im Abschnitt Karteneinstellungen kann dabei helfen, den Kachelanbieter zu identifizieren und dessen Datenschutzdokumentation zu finden."
+
+#: templates/geometadata/manager.html
+msgid "If your journal displays maps to visitors, your data privacy statement should inform users about the external tile service connection. When using a non-default basemap provider, update your privacy statement to reference that specific provider's policies."
+msgstr "Wenn Ihre Zeitschrift Besuchern Karten anzeigt, sollte Ihre Datenschutzerklärung die Benutzer über die Verbindung zum externen Kacheldienst informieren. Bei Verwendung eines nicht standardmäßigen Kartenanbieters aktualisieren Sie Ihre Datenschutzerklärung mit Verweis auf die spezifischen Richtlinien dieses Anbieters."
+
+#
+# templates/geometadata/submission_review_summary.html
+#
+
+#: templates/geometadata/submission_review_summary.html
+msgid "Geospatial and Temporal Coverage"
+msgstr "Räumliche und zeitliche Abdeckung"
+
+#: templates/geometadata/submission_review_summary.html
+msgid "Geometry"
+msgstr "Geometrie"
+
+#
+# templates/geometadata/edit_article_link.html
+#
+
+#: templates/geometadata/edit_article_link.html
+msgid "Geospatial Metadata"
+msgstr "Räumliche Metadaten"
+
+#: templates/geometadata/edit_article_link.html
+msgid "Place"
+msgstr "Ort"
+
+#: templates/geometadata/edit_article_link.html
+msgid "Time"
+msgstr "Zeit"
+
+#: templates/geometadata/edit_article_link.html
+msgid "No geospatial metadata has been added to this article yet."
+msgstr "Für diesen Artikel wurden noch keine räumlichen Metadaten hinzugefügt."
+
+#: templates/geometadata/edit_article_link.html
+#: templates/geometadata/editor_action_link.html
+# "Edit Geometadata" already defined at templates/geometadata/edit_article.html
+
+#: templates/geometadata/edit_article_link.html
+msgid "Add Geometadata"
+msgstr "Geodaten hinzufügen"

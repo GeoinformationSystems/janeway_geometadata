@@ -1,0 +1,85 @@
+{% load static i18n %}
+{# Map display for article/preprint sidebar or footer #}
+{# Styled to match OLH theme sidebar sections #}
+
+{% if geometadata.has_spatial_data or geometadata.has_temporal_data %}
+<link rel="stylesheet" href="{% static 'geometadata/css/leaflet.css' %}" />
+<link rel="stylesheet" href="{% static 'geometadata/css/leaflet.fullscreen.css' %}" />
+<link rel="stylesheet" href="{% static 'geometadata/css/geometadata.css' %}" />
+<div class="section hide-for-small-only geometadata-container" id="geometadata-{{ content_type }}-{{ content_id }}">
+    <h2>{% trans "Time and Location" %}</h2>
+
+    {% if show_temporal and geometadata.has_temporal_data %}
+    <ul class="geometadata-temporal">
+        {% for period_display in geometadata.get_temporal_display %}
+        <li><span class="geometadata-dates">{{ period_display }}</span></li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
+    {% if has_geometry %}
+    <div class="geometadata-spatial">
+        {% if show_placenames and geometadata.place_name %}
+        <ul>
+            <li>{{ geometadata.place_name }}</li>
+        </ul>
+        {% endif %}
+
+        <div class="geometadata-map-container">
+            <div id="geometadata-map-{{ content_type }}-{{ content_id }}"
+                 class="geometadata-map"
+                 style="height: 200px; width: 100%;"
+                 data-geojson='{{ geojson|safe }}'
+                 data-center-lat="{{ centroid_lat }}"
+                 data-center-lng="{{ centroid_lng }}"
+                 data-zoom="{{ default_zoom }}"
+                 data-basemap-provider="{{ basemap_provider|default:'OpenStreetMap.Mapnik' }}"
+                 data-feature-colour="{{ feature_colour|default:'#3388ff' }}"
+                 data-feature-opacity="{{ feature_opacity|default:'0.7' }}"
+                 data-disable-popup="true"
+                 data-i18n-zoom-in="{% trans "Zoom in" %}"
+                 data-i18n-zoom-out="{% trans "Zoom out" %}"
+                 data-i18n-fullscreen="{% trans "Full Screen" %}"
+                 data-i18n-exit-fullscreen="{% trans "Exit Full Screen" %}"
+                 data-i18n-view="{% trans "View" %}"
+                 data-i18n-reset-view="{% trans "Reset map view" %}">
+            </div>
+            <p class="geometadata-reset-link">
+                <a href="#" id="geometadata-reset-{{ content_type }}-{{ content_id }}" class="small muted">{% trans "Reset map view" %}</a>
+            </p>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if show_download_geojson and has_geometry %}
+    <ul class="geometadata-download">
+        <li>
+            <a href="{% url 'geometadata_download_article' content_id %}"
+               class="geometadata-download-link">
+                <i class="fa fa-download"></i> {% trans "Download GeoJSON" %}
+            </a>
+        </li>
+    </ul>
+    {% endif %}
+</div>
+
+<script src="{% static 'geometadata/js/leaflet.js' %}"></script>
+<script src="{% static 'geometadata/js/leaflet-providers.js' %}"></script>
+<script src="{% static 'geometadata/js/leaflet.fullscreen.js' %}"></script>
+<script src="{% static 'geometadata/js/geometadata-display.js' %}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var mapResult = initGeometadataMap('geometadata-map-{{ content_type }}-{{ content_id }}');
+        var resetLink = document.getElementById('geometadata-reset-{{ content_type }}-{{ content_id }}');
+        if (resetLink && mapResult && mapResult.geoLayer) {
+            resetLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                var bounds = mapResult.geoLayer.getBounds();
+                if (bounds.isValid()) {
+                    mapResult.map.fitBounds(bounds, { padding: [20, 20], maxZoom: 12 });
+                }
+            });
+        }
+    });
+</script>
+{% endif %}

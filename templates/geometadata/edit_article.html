@@ -1,0 +1,217 @@
+{% extends "admin/core/base.html" %}
+{% load static i18n %}
+
+{% block title %}{% trans "Edit Geometadata" %} - {{ article.title }}{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'geometadata/css/leaflet.css' %}" />
+<link rel="stylesheet" href="{% static 'geometadata/css/leaflet.fullscreen.css' %}" />
+<link rel="stylesheet" href="{% static 'geometadata/css/leaflet.draw.css' %}" />
+<link rel="stylesheet" href="{% static 'geometadata/css/geometadata.css' %}" />
+{% endblock %}
+
+{% block breadcrumbs %}
+    {{ block.super }}
+    <li><a href="#">{{ article.title|truncatewords:5 }}</a></li>
+    <li><a href="{% url 'geometadata_edit_article' article.pk %}">{% trans "Geometadata" %}</a></li>
+{% endblock %}
+
+{% block body %}
+<div class="large-12 columns">
+    <div class="box">
+        <div class="title-area">
+            <h2>{% trans "Edit Geometadata" %}</h2>
+        </div>
+        <div class="content">
+            <form method="post" id="geometadata-form">
+                {% csrf_token %}
+
+                <div class="row">
+                    <div class="large-12 columns">
+                        <label>{% trans "Article" %}
+                            <input type="text" value="{{ article.title }}" disabled readonly>
+                        </label>
+                    </div>
+                </div>
+
+                <hr>
+
+                <div class="row">
+                    <div class="large-12 columns">
+                        <h4>{% trans "Spatial Coverage" %}</h4>
+                        <p>{% trans "Define the geographic area(s) covered by this article. You can draw on the map or enter WKT geometry directly." %}</p>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="large-8 columns">
+                        <div id="geometadata-edit-map" style="height: 400px; width: 100%;"
+                             data-i18n-zoom-in="{% trans "Zoom in" %}"
+                             data-i18n-zoom-out="{% trans "Zoom out" %}"
+                             data-i18n-fullscreen="{% trans "Full Screen" %}"
+                             data-i18n-exit-fullscreen="{% trans "Exit Full Screen" %}"></div>
+                    </div>
+                    <div class="large-4 columns">
+                        <label>{% trans "Geometry (WKT)" %}
+                            {{ form.geometry_wkt }}
+                        </label>
+                        {% if form.geometry_wkt.help_text %}
+                        <p class="help-text">{{ form.geometry_wkt.help_text }}</p>
+                        {% endif %}
+                        {% if form.geometry_wkt.errors %}
+                        <small class="error">{{ form.geometry_wkt.errors|join:", " }}</small>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="large-6 columns">
+                        <label>{% trans "Place Name" %}
+                            {{ form.place_name }}
+                        </label>
+                        {% if form.place_name.help_text %}
+                        <p class="help-text">{{ form.place_name.help_text }}</p>
+                        {% endif %}
+                    </div>
+                    <div class="large-6 columns">
+                        <label>{% trans "Administrative Units" %}
+                            {{ form.admin_units }}
+                        </label>
+                        {% if form.admin_units.help_text %}
+                        <p class="help-text">{{ form.admin_units.help_text }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="large-12 columns">
+                        <button type="button" class="button small secondary" id="lookup-location-btn"
+                                data-i18n-no-geometry="{% trans "Please draw a geometry on the map first." %}"
+                                data-i18n-confirm="{% trans "Place name or administrative units already have values. Overwrite?" %}"
+                                data-i18n-loading="{% trans "Looking up..." %}"
+                                data-i18n-success="{% trans "Location names updated." %}"
+                                data-i18n-error="{% trans "Geocoding failed. Please try again later." %}">
+                            <i class="fa fa-map-marker"></i> {% trans "Lookup Location Names" %}
+                        </button>
+                        <p class="help-text">{% trans "Automatically derive place names and administrative units from the drawn geometry via reverse geocoding." %}</p>
+                    </div>
+                </div>
+
+                <hr>
+
+                <div class="row">
+                    <div class="large-12 columns">
+                        <h4>{% trans "Temporal Coverage" %}</h4>
+                        <p>{% trans "Define the time period(s) covered by this article. Recognised date formats (YYYY, YYYY-MM, YYYY-MM-DD) are validated for ordering. Free text is also accepted (e.g. 'Holocene', 'Summer 2021')." %}</p>
+                    </div>
+                </div>
+
+                {{ form.temporal_periods_json }}
+
+                <div id="temporal-periods-container">
+                    {# Rows are rendered by JavaScript from the hidden JSON field #}
+                </div>
+                <div class="row">
+                    <div class="large-12 columns">
+                        <button type="button" class="button small secondary" id="add-temporal-period">
+                            <i class="fa fa-plus"></i> {% trans "Add Time Period" %}
+                        </button>
+                    </div>
+                </div>
+
+                {% if form.non_field_errors %}
+                <div class="row">
+                    <div class="large-12 columns">
+                        <div class="callout alert">
+                            {{ form.non_field_errors }}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <hr>
+
+                <div class="row">
+                    <div class="large-12 columns">
+                        <button type="submit" class="button success">
+                            <i class="fa fa-save"></i> {% trans "Save Geometadata" %}
+                        </button>
+                        <a href="{% url 'manage_archive_article' article.pk %}" class="button secondary">
+                            {% trans "Back to Article" %}
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script src="{% static 'geometadata/js/leaflet.js' %}"></script>
+<script src="{% static 'geometadata/js/leaflet-providers.js' %}"></script>
+<script src="{% static 'geometadata/js/leaflet.fullscreen.js' %}"></script>
+<script src="{% static 'geometadata/js/leaflet.draw.js' %}"></script>
+<script src="{% static 'geometadata/js/geometadata-edit.js' %}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Translate Leaflet.draw toolbar strings
+        if (L.drawLocal) {
+            L.drawLocal.draw.toolbar.actions.title = '{% trans "Cancel drawing" %}';
+            L.drawLocal.draw.toolbar.actions.text = '{% trans "Cancel" %}';
+            L.drawLocal.draw.toolbar.finish.title = '{% trans "Finish drawing" %}';
+            L.drawLocal.draw.toolbar.finish.text = '{% trans "Finish" %}';
+            L.drawLocal.draw.toolbar.undo.title = '{% trans "Delete last point drawn" %}';
+            L.drawLocal.draw.toolbar.undo.text = '{% trans "Delete last point" %}';
+            L.drawLocal.draw.toolbar.buttons.polyline = '{% trans "Draw a polyline" %}';
+            L.drawLocal.draw.toolbar.buttons.polygon = '{% trans "Draw a polygon" %}';
+            L.drawLocal.draw.toolbar.buttons.rectangle = '{% trans "Draw a rectangle" %}';
+            L.drawLocal.draw.toolbar.buttons.circle = '{% trans "Draw a circle" %}';
+            L.drawLocal.draw.toolbar.buttons.marker = '{% trans "Draw a marker" %}';
+            L.drawLocal.draw.toolbar.buttons.circlemarker = '{% trans "Draw a circle marker" %}';
+            L.drawLocal.draw.handlers.circle.tooltip.start = '{% trans "Click and drag to draw circle." %}';
+            L.drawLocal.draw.handlers.circlemarker.tooltip.start = '{% trans "Click map to place circle marker." %}';
+            L.drawLocal.draw.handlers.marker.tooltip.start = '{% trans "Click map to place marker." %}';
+            L.drawLocal.draw.handlers.polygon.tooltip.start = '{% trans "Click to start drawing shape." %}';
+            L.drawLocal.draw.handlers.polygon.tooltip.cont = '{% trans "Click to continue drawing shape." %}';
+            L.drawLocal.draw.handlers.polygon.tooltip.end = '{% trans "Click first point to close this shape." %}';
+            L.drawLocal.draw.handlers.polyline.tooltip.start = '{% trans "Click to start drawing line." %}';
+            L.drawLocal.draw.handlers.polyline.tooltip.cont = '{% trans "Click to continue drawing line." %}';
+            L.drawLocal.draw.handlers.polyline.tooltip.end = '{% trans "Click last point to finish line." %}';
+            L.drawLocal.draw.handlers.rectangle.tooltip.start = '{% trans "Click and drag to draw rectangle." %}';
+            L.drawLocal.draw.handlers.simpleshape.tooltip.end = '{% trans "Release mouse to finish drawing." %}';
+            L.drawLocal.edit.toolbar.actions.save.title = '{% trans "Save changes" %}';
+            L.drawLocal.edit.toolbar.actions.save.text = '{% trans "Save" %}';
+            L.drawLocal.edit.toolbar.actions.cancel.title = '{% trans "Cancel editing, discards all changes" %}';
+            L.drawLocal.edit.toolbar.actions.cancel.text = '{% trans "Cancel" %}';
+            L.drawLocal.edit.toolbar.actions.clearAll.title = '{% trans "Clear all layers" %}';
+            L.drawLocal.edit.toolbar.actions.clearAll.text = '{% trans "Clear All" %}';
+            L.drawLocal.edit.toolbar.buttons.edit = '{% trans "Edit layers" %}';
+            L.drawLocal.edit.toolbar.buttons.editDisabled = '{% trans "No layers to edit" %}';
+            L.drawLocal.edit.toolbar.buttons.remove = '{% trans "Delete layers" %}';
+            L.drawLocal.edit.toolbar.buttons.removeDisabled = '{% trans "No layers to delete" %}';
+            L.drawLocal.edit.handlers.edit.tooltip.text = '{% trans "Drag handles or markers to edit features." %}';
+            L.drawLocal.edit.handlers.edit.tooltip.subtext = '{% trans "Click cancel to undo changes." %}';
+            L.drawLocal.edit.handlers.remove.tooltip.text = '{% trans "Click on a feature to remove." %}';
+        }
+
+        initGeometadataEditMap('geometadata-edit-map', {
+            wktInputId: '{{ form.geometry_wkt.id_for_label }}',
+            centerLat: {{ default_lat|default:0 }},
+            centerLng: {{ default_lng|default:0 }},
+            zoom: {{ default_zoom|default:2 }},
+            basemapProvider: '{{ basemap_provider|default:"OpenStreetMap.Mapnik" }}'
+        });
+        initReverseGeocoding('lookup-location-btn', '{{ form.geometry_wkt.id_for_label }}',
+            '{{ form.place_name.id_for_label }}', '{{ form.admin_units.id_for_label }}',
+            '{% url "geometadata_reverse_geocode_api" %}');
+        initTemporalPeriodsUI('id_temporal_periods_json', 'temporal-periods-container', 'add-temporal-period', {
+            startLabel: '{% trans "Start" %}',
+            endLabel: '{% trans "End" %}',
+            startPlaceholder: '{% trans "Start (e.g. 2020-01, Holocene)" %}',
+            endPlaceholder: '{% trans "End (e.g. 2021-06)" %}',
+            removeTitle: '{% trans "Remove" %}'
+        });
+    });
+</script>
+{% endblock %}

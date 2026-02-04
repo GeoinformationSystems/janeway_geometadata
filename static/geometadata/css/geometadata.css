@@ -1,0 +1,180 @@
+/**
+ * Geometadata Plugin Styles
+ * Custom styling for geospatial and temporal metadata display
+ */
+
+/* Container styles - matches OLH sidebar section styling */
+.geometadata-container {
+    margin: 0 0 1rem 0;
+    padding: 0;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+}
+
+.geometadata-title {
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+    padding-bottom: 0;
+    border-bottom: none;
+    font-size: 1rem;
+    font-weight: bold;
+    color: inherit;
+}
+
+/* Temporal metadata */
+.geometadata-temporal {
+    margin-bottom: 15px;
+}
+
+.geometadata-dates {
+    color: #666;
+    font-style: italic;
+}
+
+/* Spatial metadata */
+.geometadata-spatial {
+    margin-top: 10px;
+}
+
+.geometadata-place {
+    margin-bottom: 10px;
+}
+
+/* Map container */
+.geometadata-map-container {
+    border: none;
+    border-radius: 0;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+}
+
+.geometadata-map {
+    min-height: 200px;
+    background: #e8e8e8;
+    border-radius: 4px;
+}
+
+/* Full page map */
+.geometadata-fullpage-container {
+    padding: 20px;
+}
+
+.geometadata-fullpage-container h1 {
+    margin-bottom: 10px;
+}
+
+#geometadata-fullmap {
+    height: calc(100vh - 250px);
+    min-height: 500px;
+    width: 100%;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.geometadata-loading {
+    text-align: center;
+    padding: 50px;
+    color: #666;
+}
+
+.geometadata-loading i {
+    margin-bottom: 10px;
+}
+
+/* Edit page styles */
+#geometadata-edit-map {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-bottom: 15px;
+}
+
+/* Stats on manager page */
+.stat-number {
+    font-size: 2em;
+    font-weight: bold;
+    color: #3388ff;
+    margin: 0;
+}
+
+/* Popup styles for maps */
+.geometadata-popup {
+    min-width: 200px;
+}
+
+.geometadata-popup h5 {
+    margin: 0 0 8px 0;
+    font-size: 1em;
+    color: #333;
+}
+
+.geometadata-popup p {
+    margin: 4px 0;
+    font-size: 0.9em;
+    color: #666;
+}
+
+.geometadata-popup a {
+    display: inline-block;
+    margin-top: 8px;
+    color: #3388ff;
+}
+
+/* Navigation link */
+.geometadata-nav-link {
+    display: inline-flex;
+    align-items: center;
+}
+
+.geometadata-nav-link i {
+    margin-right: 5px;
+}
+
+/* Form help text */
+.geometadata-help {
+    font-size: 0.85em;
+    color: #666;
+    margin-top: 5px;
+}
+
+/* WKT textarea in edit forms */
+#id_geometry_wkt {
+    font-family: monospace;
+    font-size: 0.9em;
+    min-height: 150px;
+}
+
+/* Reset map view link */
+.geometadata-reset-link {
+    margin: 0.25rem 0 0 0;
+    text-align: right;
+}
+
+.geometadata-reset-link a,
+.geometadata-reset-link a.small.muted {
+    color: #888;
+    font-size: 0.8em;
+    text-decoration: none;
+}
+
+.geometadata-reset-link a:hover,
+.geometadata-reset-link a.small.muted:hover {
+    color: #555;
+    text-decoration: underline;
+}
+
+/* Responsive adjustments */
+@media screen and (max-width: 768px) {
+    .geometadata-container {
+        padding: 10px;
+    }
+
+    .geometadata-map {
+        min-height: 150px;
+    }
+
+    #geometadata-fullmap {
+        height: calc(100vh - 200px);
+        min-height: 300px;
+    }
+}
