@@ -5,6 +5,8 @@ __license__ = "AGPL v3"
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
+from geomet import wkt as geomet_wkt
+
 
 class AbstractGeometadata(models.Model):
     """
@@ -170,8 +172,7 @@ class AbstractGeometadata(models.Model):
 
     def update_bbox_from_wkt(self):
         """
-        Parse WKT and update bounding box fields.
-        This is a simple parser that extracts coordinates from WKT.
+        Parse WKT and update bounding box fields using the geomet library.
         """
         if not self.geometry_wkt:
             self.bbox_north = None
@@ -180,34 +181,53 @@ class AbstractGeometadata(models.Model):
             self.bbox_west = None
             return
 
-        import re
+        try:
+            geometry = geomet_wkt.loads(self.geometry_wkt)
+            coords = self._extract_all_coordinates(geometry)
 
-        # Extract all coordinate pairs (lng lat) from WKT
-        # Match patterns like: -10.5 35.2 or -10 35
-        coord_pattern = r"(-?\d+\.?\d*)\s+(-?\d+\.?\d*)"
-        matches = re.findall(coord_pattern, self.geometry_wkt)
+            if coords:
+                lngs = [c[0] for c in coords if -180 <= c[0] <= 180]
+                lats = [c[1] for c in coords if -90 <= c[1] <= 90]
 
-        if not matches:
-            return
+                if lngs and lats:
+                    self.bbox_north = max(lats)
+                    self.bbox_south = min(lats)
+                    self.bbox_east = max(lngs)
+                    self.bbox_west = min(lngs)
+        except Exception:
+            # If parsing fails, clear bbox fields
+            self.bbox_north = None
+            self.bbox_south = None
+            self.bbox_east = None
+            self.bbox_west = None
 
-        lngs = []
-        lats = []
-        for lng_str, lat_str in matches:
-            try:
-                lng = float(lng_str)
-                lat = float(lat_str)
-                # Validate coordinate ranges
-                if -180 <= lng <= 180 and -90 <= lat <= 90:
-                    lngs.append(lng)
-                    lats.append(lat)
-            except ValueError:
-                continue
+    def _extract_all_coordinates(self, geometry):
+        """
+        Recursively extract all coordinate pairs from a GeoJSON geometry.
+        Returns a flat list of [lng, lat] pairs.
+        """
+        coords = []
+        geom_type = geometry.get("type")
 
-        if lngs and lats:
-            self.bbox_north = max(lats)
-            self.bbox_south = min(lats)
-            self.bbox_east = max(lngs)
-            self.bbox_west = min(lngs)
+        if geom_type == "Point":
+            coords.append(geometry["coordinates"][:2])
+        elif geom_type in ("LineString", "MultiPoint"):
+            for coord in geometry["coordinates"]:
+                coords.append(coord[:2])
+        elif geom_type in ("Polygon", "MultiLineString"):
+            for ring in geometry["coordinates"]:
+                for coord in ring:
+                    coords.append(coord[:2])
+        elif geom_type == "MultiPolygon":
+            for polygon in geometry["coordinates"]:
+                for ring in polygon:
+                    for coord in ring:
+                        coords.append(coord[:2])
+        elif geom_type == "GeometryCollection":
+            for geom in geometry.get("geometries", []):
+                coords.extend(self._extract_all_coordinates(geom))
+
+        return coords
 
     def save(self, *args, **kwargs):
         """Update bounding box before saving."""
@@ -223,232 +243,17 @@ class AbstractGeometadata(models.Model):
             return None
 
         try:
-            geometry = self._wkt_to_geojson_geometry()
-            if geometry:
-                return {
-                    "type": "Feature",
-                    "geometry": geometry,
-                    "properties": {
-                        "place_name": self.place_name or "",
-                        "temporal_periods": self.temporal_periods or [],
-                    },
-                }
+            geometry = geomet_wkt.loads(self.geometry_wkt)
+            return {
+                "type": "Feature",
+                "geometry": geometry,
+                "properties": {
+                    "place_name": self.place_name or "",
+                    "temporal_periods": self.temporal_periods or [],
+                },
+            }
         except Exception:
-            pass
-        return None
-
-    def _wkt_to_geojson_geometry(self):
-        """
-        Convert WKT string to GeoJSON geometry object.
-        This is a simplified parser for common geometry types.
-        """
-        import re
-
-        if not self.geometry_wkt:
             return None
-
-        wkt = self.geometry_wkt.strip()
-        gtype = self.get_geometry_type()
-
-        if not gtype:
-            return None
-
-        # Extract coordinates part (everything in parentheses)
-        coord_match = re.search(r"\((.+)\)$", wkt, re.DOTALL)
-        if not coord_match:
-            return None
-
-        coords_str = coord_match.group(1)
-
-        if gtype == "POINT":
-            # POINT(lng lat)
-            parts = coords_str.strip().split()
-            if len(parts) >= 2:
-                return {
-                    "type": "Point",
-                    "coordinates": [float(parts[0]), float(parts[1])],
-                }
-
-        elif gtype == "LINESTRING":
-            # LINESTRING(lng1 lat1, lng2 lat2, ...)
-            coords = self._parse_coord_sequence(coords_str)
-            if coords:
-                return {"type": "LineString", "coordinates": coords}
-
-        elif gtype == "POLYGON":
-            # POLYGON((lng1 lat1, lng2 lat2, ..., lng1 lat1))
-            # Can have multiple rings (outer + holes)
-            rings = self._parse_polygon_rings(coords_str)
-            if rings:
-                return {"type": "Polygon", "coordinates": rings}
-
-        elif gtype == "MULTIPOINT":
-            coords = self._parse_coord_sequence(coords_str)
-            if coords:
-                return {"type": "MultiPoint", "coordinates": coords}
-
-        elif gtype == "MULTILINESTRING":
-            lines = self._parse_multi_sequence(coords_str)
-            if lines:
-                return {"type": "MultiLineString", "coordinates": lines}
-
-        elif gtype == "MULTIPOLYGON":
-            polygons = self._parse_multipolygon(coords_str)
-            if polygons:
-                return {"type": "MultiPolygon", "coordinates": polygons}
-
-        elif gtype == "GEOMETRYCOLLECTION":
-            geometries = self._parse_geometry_collection(coords_str)
-            if geometries:
-                return {"type": "GeometryCollection", "geometries": geometries}
-
-        return None
-
-    def _parse_coord_sequence(self, coords_str):
-        """Parse a sequence of coordinates like 'lng1 lat1, lng2 lat2'."""
-        coords = []
-        for pair in coords_str.split(","):
-            parts = pair.strip().split()
-            if len(parts) >= 2:
-                try:
-                    coords.append([float(parts[0]), float(parts[1])])
-                except ValueError:
-                    continue
-        return coords if coords else None
-
-    def _parse_polygon_rings(self, coords_str):
-        """Parse polygon rings from WKT format."""
-        import re
-
-        rings = []
-        # Match each ring: (lng1 lat1, lng2 lat2, ...)
-        ring_pattern = r"\(([^()]+)\)"
-        for match in re.finditer(ring_pattern, coords_str):
-            ring_coords = self._parse_coord_sequence(match.group(1))
-            if ring_coords:
-                rings.append(ring_coords)
-        return rings if rings else None
-
-    def _parse_multi_sequence(self, coords_str):
-        """Parse multiple coordinate sequences."""
-        import re
-
-        sequences = []
-        # Match each sequence in parentheses
-        seq_pattern = r"\(([^()]+)\)"
-        for match in re.finditer(seq_pattern, coords_str):
-            seq = self._parse_coord_sequence(match.group(1))
-            if seq:
-                sequences.append(seq)
-        return sequences if sequences else None
-
-    def _parse_multipolygon(self, coords_str):
-        """Parse multipolygon from WKT format."""
-        import re
-
-        polygons = []
-        # Match each polygon: ((ring1), (ring2), ...)
-        # This is a simplified approach
-        poly_pattern = r"\(\(([^)]+(?:\),[^)]+)*)\)\)"
-        for match in re.finditer(poly_pattern, coords_str):
-            rings = self._parse_polygon_rings("(" + match.group(1) + ")")
-            if rings:
-                polygons.append(rings)
-        return polygons if polygons else None
-
-    def _parse_geometry_collection(self, coords_str):
-        """
-        Parse a GEOMETRYCOLLECTION from WKT format.
-
-        GEOMETRYCOLLECTION contains multiple geometries of different types.
-        We parse each sub-geometry and convert it to GeoJSON.
-        """
-        import re
-
-        geometries = []
-        # Pattern to match each geometry type with its content
-        # Handles nested parentheses by matching balanced groups
-        geometry_types = [
-            "MULTIPOLYGON",
-            "MULTILINESTRING",
-            "MULTIPOINT",
-            "POLYGON",
-            "LINESTRING",
-            "POINT",
-        ]
-        pattern = (
-            r"(" + "|".join(geometry_types) + r")\s*(\([^()]*(?:\([^()]*\)[^()]*)*\))"
-        )
-
-        for match in re.finditer(pattern, coords_str, re.IGNORECASE):
-            gtype = match.group(1).upper()
-            content = match.group(2)
-
-            # Create a temporary WKT string and parse it
-            temp_wkt = f"{gtype}{content}"
-            geom = self._parse_single_geometry(temp_wkt)
-            if geom:
-                geometries.append(geom)
-
-        return geometries if geometries else None
-
-    def _parse_single_geometry(self, wkt_str):
-        """
-        Parse a single geometry WKT string to GeoJSON.
-        Helper for GEOMETRYCOLLECTION parsing.
-        """
-        import re
-
-        wkt = wkt_str.strip().upper()
-
-        for gtype in [
-            "MULTIPOLYGON",
-            "MULTILINESTRING",
-            "MULTIPOINT",
-            "POLYGON",
-            "LINESTRING",
-            "POINT",
-        ]:
-            if wkt.startswith(gtype):
-                coord_match = re.search(r"\((.+)\)$", wkt_str, re.DOTALL)
-                if not coord_match:
-                    return None
-                coords_str = coord_match.group(1)
-
-                if gtype == "POINT":
-                    parts = coords_str.strip().split()
-                    if len(parts) >= 2:
-                        return {
-                            "type": "Point",
-                            "coordinates": [float(parts[0]), float(parts[1])],
-                        }
-
-                elif gtype == "LINESTRING":
-                    coords = self._parse_coord_sequence(coords_str)
-                    if coords:
-                        return {"type": "LineString", "coordinates": coords}
-
-                elif gtype == "POLYGON":
-                    rings = self._parse_polygon_rings(coords_str)
-                    if rings:
-                        return {"type": "Polygon", "coordinates": rings}
-
-                elif gtype == "MULTIPOINT":
-                    coords = self._parse_coord_sequence(coords_str)
-                    if coords:
-                        return {"type": "MultiPoint", "coordinates": coords}
-
-                elif gtype == "MULTILINESTRING":
-                    lines = self._parse_multi_sequence(coords_str)
-                    if lines:
-                        return {"type": "MultiLineString", "coordinates": lines}
-
-                elif gtype == "MULTIPOLYGON":
-                    polygons = self._parse_multipolygon(coords_str)
-                    if polygons:
-                        return {"type": "MultiPolygon", "coordinates": polygons}
-
-        return None
 
 
 class ArticleGeometadata(AbstractGeometadata):

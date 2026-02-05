@@ -1,0 +1,68 @@
+# This CITATION.cff file was created for the Geometadata Plugin for Janeway.
+# Visit https://citation-file-format.github.io/ for the CFF specification.
+
+cff-version: 1.2.0
+title: Geometadata Plugin for Janeway
+message: >-
+  If you use this software, please cite it using the metadata from this file.
+type: software
+authors:
+  - family-names: Nüst
+    given-names: Daniel
+    orcid: "https://orcid.org/0000-0002-0024-5046"
+    affiliation: "TUD Dresden University of Technology, Chair of Geoinformatics"
+version: 0.1.0
+date-released: "2025-01-28"
+license: AGPL-3.0-or-later
+repository-code: "https://github.com/GeoinformationSystems/janeway_geometadata"
+url: "https://projects.tib.eu/komet"
+abstract: >-
+  A plugin for Janeway that adds geospatial and temporal metadata support for
+  journal articles and repository preprints. Features include spatial metadata
+  storage as WKT geometry with automatic bounding box calculation, temporal
+  metadata with flexible date ranges, interactive Leaflet.js map display,
+  editor interface with drawing tools and reverse geocoding, GeoJSON API
+  endpoints, and HTML metadata embedding (Dublin Core, Schema.org, geo.* meta
+  tags). Developed as part of the KOMET project.
+keywords:
+  - geospatial metadata
+  - temporal metadata
+  - Janeway
+  - scholarly publishing
+  - open access
+  - GeoJSON
+  - WKT
+  - Leaflet
+  - KOMET
+  - OPTIMETA
+  - research data
+  - Django plugin
+contact:
+  - family-names: Nüst
+    given-names: Daniel
+    orcid: "https://orcid.org/0000-0002-0024-5046"
+    affiliation: "TUD Dresden University of Technology, Chair of Geoinformatics"
+references:
+  - type: software
+    title: Janeway
+    authors:
+      - name: "Birkbeck, University of London"
+    repository-code: "https://github.com/openlibhums/janeway"
+    url: "https://janeway.systems"
+    license: AGPL-3.0-or-later
+  - type: software
+    title: geoMetadata Plugin for OJS
+    authors:
+      - name: "TIB Hannover"
+    repository-code: "https://github.com/TIBHannover/geoMetadata"
+    abstract: >-
+      OJS plugin for geospatial metadata collection, the counterpart to this
+      Janeway plugin.
+  - type: software
+    title: OPTIMAP
+    authors:
+      - name: "GeoinformationSystems"
+    repository-code: "https://github.com/GeoinformationSystems/optimap"
+    abstract: >-
+      Web portal for geospatial discovery of research articles based on open
+      metadata collected by geoMetadata plugins.

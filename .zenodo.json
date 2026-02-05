@@ -1,0 +1,73 @@
+{
+  "title": "Geometadata Plugin for Janeway",
+  "description": "<p>A plugin for <a href=\"https://github.com/openlibhums/janeway\">Janeway</a> that adds geospatial and temporal metadata support for journal articles and repository preprints. Developed as part of the <a href=\"https://projects.tib.eu/komet\">KOMET project</a> (Kompetenznetzwerk für das Management und die Erschließung von textbasierten Forschungsdaten).</p><p><strong>Features:</strong></p><ul><li>Spatial metadata storage as WKT geometry with automatic bounding box calculation</li><li>Temporal metadata with flexible date ranges and free-text periods</li><li>Interactive Leaflet.js map display on article, issue, and dedicated map pages</li><li>Editor interface with drawing tools and reverse geocoding</li><li>GeoJSON API endpoints for programmatic access</li><li>HTML metadata embedding (Dublin Core, Schema.org, geo.* meta tags)</li><li>Colour-coded markers using ColorBrewer palettes</li><li>Full i18n support (English, German)</li></ul><p>This plugin complements the <a href=\"https://github.com/TIBHannover/geoMetadata\">geoMetadata plugin for OJS</a>, bringing equivalent functionality to the Janeway publishing platform. Geospatial metadata collected by both plugins can be aggregated and discovered through <a href=\"https://github.com/GeoinformationSystems/optimap\">OPTIMAP</a>.</p><p>Source repository: <a href=\"https://github.com/GeoinformationSystems/janeway_geometadata\">github.com/GeoinformationSystems/janeway_geometadata</a></p>",
+  "creators": [
+    {
+      "name": "Nüst, Daniel",
+      "affiliation": "TUD Dresden University of Technology, Chair of Geoinformatics",
+      "orcid": "0000-0002-0024-5046"
+    }
+  ],
+  "keywords": [
+    "geospatial metadata",
+    "temporal metadata",
+    "Janeway",
+    "scholarly publishing",
+    "open access",
+    "GeoJSON",
+    "WKT",
+    "Leaflet",
+    "KOMET",
+    "OPTIMETA",
+    "research data",
+    "metadata"
+  ],
+  "license": "AGPL-3.0-or-later",
+  "upload_type": "software",
+  "access_right": "open",
+  "language": "eng",
+  "grants": [
+    {
+      "id": "10.13039/501100002347::16TOA039"
+    }
+  ],
+  "related_identifiers": [
+    {
+      "identifier": "https://github.com/GeoinformationSystems/janeway_geometadata",
+      "relation": "isSupplementedBy",
+      "resource_type": "software",
+      "scheme": "url"
+    },
+    {
+      "identifier": "https://github.com/openlibhums/janeway",
+      "relation": "requires",
+      "resource_type": "software",
+      "scheme": "url"
+    },
+    {
+      "identifier": "https://github.com/TIBHannover/geoMetadata",
+      "relation": "isVariantFormOf",
+      "resource_type": "software",
+      "scheme": "url"
+    },
+    {
+      "identifier": "https://github.com/GeoinformationSystems/optimap",
+      "relation": "isSupplementTo",
+      "resource_type": "software",
+      "scheme": "url"
+    },
+    {
+      "identifier": "https://projects.tib.eu/komet",
+      "relation": "isDocumentedBy",
+      "resource_type": "other",
+      "scheme": "url"
+    }
+  ],
+  "references": [
+    "KOMET project website: https://projects.tib.eu/komet",
+    "Janeway publishing platform: https://janeway.systems/",
+    "geoMetadata plugin for OJS: https://github.com/TIBHannover/geoMetadata",
+    "OPTIMAP geospatial discovery portal: https://github.com/GeoinformationSystems/optimap"
+  ],
+  "notes": "This work is funded by the German Federal Ministry of Education and Research (BMBF) under grant number 16TOA039. The KOMET project is part of the funding initiative 'Förderung von Projekten zur Etablierung einer gelebten Open-Access-Kultur in der deutschen Forschungs- und Wissenschaftspraxis.'"
+}
