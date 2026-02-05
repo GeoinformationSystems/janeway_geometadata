@@ -26,9 +26,17 @@
   "upload_type": "software",
   "access_right": "open",
   "language": "eng",
-  "grants": [
+  "funding": [
     {
-      "id": "10.13039/501100002347::16TOA039"
+      "funder": {
+        "name": "German Federal Ministry of Education and Research (BMBF)"
+      },
+      "award": {
+        "number": "16TOA039",
+        "title": {
+          "en": "KOMET - Kompetenznetzwerk für das Management und die Erschließung von textbasierten Forschungsdaten"
+        }
+      }
     }
   ],
   "related_identifiers": [
