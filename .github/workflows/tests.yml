@@ -44,16 +44,7 @@ jobs:
 
       - name: Lint code
         run: ruff check src/plugins/geometadata/
-        continue-on-error: true
-
-      - name: Install Janeway
-        working-directory: src
-        run: python manage.py install_janeway --use-defaults
-
-      - name: Install plugin
-        working-directory: src
-        run: python manage.py install_plugins geometadata
 
       - name: Run tests
         working-directory: src
-        run: python manage.py test geometadata
+        run: python manage.py test plugins.geometadata.tests.test_models plugins.geometadata.tests.test_views plugins.geometadata.tests.test_hooks plugins.geometadata.tests.test_forms plugins.geometadata.tests.test_geocoding --verbosity=2

@@ -6,7 +6,6 @@ Uses HTML parsing to verify content is in the correct elements.
 """
 
 import json
-import re
 from html.parser import HTMLParser
 
 from django.template import Context, Template
