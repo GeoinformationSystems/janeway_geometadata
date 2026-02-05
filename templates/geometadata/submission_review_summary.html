@@ -1,0 +1,35 @@
+{% load i18n %}
+{# Summary of geometadata shown during submission review #}
+{% if geometadata and has_data %}
+<div class="title-area"><h2>{% trans "Geospatial and Temporal Coverage" %}</h2></div>
+<table class="scroll small">
+    {% if has_spatial %}
+    <tr>
+        <th>{% trans "Place Name" %}</th>
+        <td>{{ geometadata.place_name|default:"-" }}</td>
+    </tr>
+    {% if geometadata.admin_units %}
+    <tr>
+        <th>{% trans "Administrative Units" %}</th>
+        <td>{{ geometadata.admin_units }}</td>
+    </tr>
+    {% endif %}
+    {% if geometadata.geometry_wkt %}
+    <tr>
+        <th>{% trans "Geometry" %}</th>
+        <td><code style="font-size: 0.85em;">{{ geometadata.geometry_wkt|truncatechars:100 }}</code></td>
+    </tr>
+    {% endif %}
+    {% endif %}
+    {% if has_temporal %}
+    <tr>
+        <th>{% trans "Temporal Coverage" %}</th>
+        <td>
+            {% for display in temporal_display %}
+                {{ display }}{% if not forloop.last %}<br>{% endif %}
+            {% endfor %}
+        </td>
+    </tr>
+    {% endif %}
+</table>
+{% endif %}

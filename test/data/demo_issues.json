@@ -1,0 +1,20 @@
+{
+  "issues": [
+    {
+      "volume": 1,
+      "number": "1",
+      "year": 2024,
+      "title": "Geometadata Demo Issue Edition 1",
+      "description": "The first issue of the Delta Quadrant Journal, featuring articles with diverse geographic coverage from Europe, Asia, and the Middle East.",
+      "date_published": "2024-09-19"
+    },
+    {
+      "volume": 1,
+      "number": "2",
+      "year": 2025,
+      "title": "Geometadata Demo Issue Edition 2",
+      "description": "The second issue featuring articles covering Asia, Europe, and demonstrating various geometry types including MultiPoint features.",
+      "date_published": "2025-01-14"
+    }
+  ]
+}

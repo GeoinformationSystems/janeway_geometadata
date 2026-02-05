@@ -1,0 +1,956 @@
+{% extends "admin/core/base.html" %}
+{% load static i18n %}
+
+{% block title %}{% trans "Geometadata Settings" %}{% endblock %}
+
+{% block breadcrumbs %}
+    {{ block.super }}
+    <li><a href="{% url 'geometadata_manager' %}">{% trans "Geometadata" %}</a></li>
+{% endblock %}
+
+{% block css %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'geometadata/css/leaflet.css' %}">
+{% endblock %}
+
+{% block body %}
+<div class="large-12 columns">
+    <div class="box">
+        <div class="title-area">
+            <h2>{% trans "Geometadata Plugin Settings" %}</h2>
+        </div>
+        <div class="content">
+            <p>
+                {% trans "Configure geospatial and temporal metadata collection and display for this journal/repository." %}
+            </p>
+
+            {% if unavailable_settings %}
+            <div class="callout warning">
+                <h5><i class="fa fa-exclamation-triangle"></i> {% trans "Template Modifications Required" %}</h5>
+                <p>
+                    {% trans "Some features require modifications to Janeway's theme templates that are not present in your installation. The following settings are disabled:" %}
+                </p>
+                <ul>
+                    {% for hook_name, info in hook_availability.items %}
+                        {% if not info.available %}
+                        <li>
+                            <strong>{{ info.description }}</strong>
+                            {% if info.dependent_settings %}
+                            <br><small>{% trans "Affected settings:" %} {{ info.dependent_settings|join:", " }}</small>
+                            {% endif %}
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+                </ul>
+                <p>
+                    <small>
+                        {% trans "To enable these features, add the required hook calls to your theme templates. See the plugin documentation for details." %}
+                        <br>
+                        {% trans "Required hook:" %} <code>{% verbatim %}{% load hooks %}{% hook 'issue_footer_block' %}{% endverbatim %}</code>
+                        {% trans "in" %} <code>journal/issue_display.html</code>
+                    </small>
+                </p>
+            </div>
+            {% endif %}
+
+            <form method="post">
+                {% csrf_token %}
+
+                <div class="row">
+                    <div class="large-12 columns">
+                        <h4>{% trans "General Settings" %}</h4>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="large-6 columns">
+                        <label>
+                            <input type="checkbox" name="enable_geometadata"
+                                   {% if settings.enable_geometadata == 'on' %}checked{% endif %}>
+                            {% trans "Enable Geometadata Collection" %}
+                        </label>
+                        <p class="help-text">
+                            {% trans "Enable collection and display of geospatial/temporal metadata." %}
+                        </p>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="large-6 columns">
+                        <label>
+                            <input type="checkbox" name="enable_spatial"
+                                   {% if settings.enable_spatial == 'on' %}checked{% endif %}>
+                            {% trans "Enable Spatial Metadata" %}
+                        </label>
+                        <p class="help-text">
+                            {% trans "Allow collection of geographic location/area metadata." %}
+                        </p>
+                    </div>
+                    <div class="large-6 columns">
+                        <label>
+                            <input type="checkbox" name="enable_temporal"
+                                   {% if settings.enable_temporal == 'on' %}checked{% endif %}>
+                            {% trans "Enable Temporal Metadata" %}
+                        </label>
+                        <p class="help-text">
+                            {% trans "Allow collection of time period metadata." %}
+                        </p>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="large-6 columns">
+                        <label>
+                            <input type="checkbox" name="enable_map"
+                                   {% if settings.enable_map == 'on' %}checked{% endif %}>
+                            {% trans "Enable Map Page" %}
+                        </label>
+                        <p class="help-text">
+                            {% trans "Enable the aggregated map page for this journal/repository." %}
+                        </p>
+                    </div>
+                    <div class="large-6 columns">
+                        <label>
+                            <input type="checkbox" name="require_geometadata"
+                                   {% if settings.require_geometadata == 'on' %}checked{% endif %}>
+                            {% trans "Require Geometadata on Submission" %}
+                        </label>
+                        <p class="help-text">
+                            {% trans "Require authors to provide geospatial metadata during submission." %}
+                        </p>
+                    </div>
+                </div>
+
+                <hr>
+
+                <div class="row">
+                    <div class="large-12 columns">
+                        <h4>{% trans "Article Landing Page Display" %}</h4>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="large-4 columns">
+                        <label>
+                            <input type="checkbox" name="show_article_map"
+                                   {% if settings.show_article_map == 'on' %}checked{% endif %}>
+                            {% trans "Show Map on Article Pages" %}
+                        </label>
+                        <p class="help-text">
+                            {% trans "Display an interactive map on article/preprint pages." %}
+                        </p>
+                    </div>
+                    <div class="large-4 columns">
+                        <label>
+                            <input type="checkbox" name="show_article_temporal"
+                                   {% if settings.show_article_temporal == 'on' %}checked{% endif %}>
+                            {% trans "Show Temporal Coverage" %}
+                        </label>
+                        <p class="help-text">
+                            {% trans "Display temporal coverage (date range) on article pages." %}
+                        </p>
+                    </div>
+                    <div class="large-4 columns">
+                        <label>
+                            <input type="checkbox" name="show_article_placenames"
+                                   {% if settings.show_article_placenames == 'on' %}checked{% endif %}>
+                            {% trans "Show Place Names" %}
+                        </label>
+                        <p class="help-text">
+                            {% trans "Display place name labels alongside the map." %}
+                        </p>
+                    </div>
+                </div>
+
+                <hr>
+
+                <div class="row">
+                    <div class="large-12 columns">
+                        <h4>{% trans "Issue Page Display" %}</h4>
+                        {% if 'show_issue_temporal' in unavailable_settings %}
+                        <p class="help-text" style="color: #cc4b37;">
+                            <i class="fa fa-exclamation-circle"></i>
+                            {% trans "These settings require the issue_footer_block hook which is not available in your theme templates." %}
+                        </p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="large-6 columns">
+                        <label {% if 'show_issue_temporal' in unavailable_settings %}style="opacity: 0.5;"{% endif %}>
+                            <input type="checkbox" name="show_issue_temporal"
+                                   {% if settings.show_issue_temporal == 'on' %}checked{% endif %}
+                                   {% if 'show_issue_temporal' in unavailable_settings %}disabled{% endif %}>
+                            {% trans "Show Temporal Coverage on Issue Pages" %}
+                        </label>
+                        <p class="help-text">
+                            {% trans "Display aggregated temporal coverage on issue landing pages." %}
+                        </p>
+                    </div>
+                </div>
+
+                <hr>
+
+                <div class="row">
+                    <div class="large-12 columns">
+                        <h4>{% trans "Downloads" %}</h4>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="large-6 columns">
+                        <label>
+                            <input type="checkbox" name="show_download_geojson"
+                                   {% if settings.show_download_geojson == 'on' %}checked{% endif %}>
+                            {% trans "Show GeoJSON Download Links" %}
+                        </label>
+                        <p class="help-text">
+                            {% trans "Show download links for geometadata in GeoJSON format on article and issue pages." %}
+                        </p>
+                    </div>
+                </div>
+
+                <hr>
+
+                <div class="row">
+                    <div class="large-12 columns">
+                        <h4>{% trans "HTML Metadata Embedding" %}</h4>
+                        <p class="help-text">
+                            {% trans "Control which metadata formats are embedded in the HTML source code of article pages for harvesters and search engines." %}
+                        </p>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="large-6 columns">
+                        <label>
+                            <input type="checkbox" name="embed_dc_coverage"
+                                   {% if settings.embed_dc_coverage == 'on' %}checked{% endif %}>
+                            {% trans "Dublin Core Coverage" %}
+                        </label>
+                        <p class="help-text">
+                            {% trans "Embed DC.SpatialCoverage, DC.box, DC.temporal, and DC.PeriodOfTime meta tags." %}
+                        </p>
+                    </div>
+                    <div class="large-6 columns">
+                        <label>
+                            <input type="checkbox" name="embed_geo_meta"
+                                   {% if settings.embed_geo_meta == 'on' %}checked{% endif %}>
+                            {% trans "geo.* Meta Tags" %}
+                        </label>
+                        <p class="help-text">
+                            {% trans "Embed geo.placename meta tags." %}
+                        </p>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="large-6 columns">
+                        <label>
+                            <input type="checkbox" name="embed_schema_spatial"
+                                   {% if settings.embed_schema_spatial == 'on' %}checked{% endif %}>
+                            {% trans "Schema.org Coverage (JSON-LD)" %}
+                        </label>
+                        <p class="help-text">
+                            {% trans "Embed Schema.org spatialCoverage and temporalCoverage as JSON-LD." %}
+                        </p>
+                    </div>
+                    <div class="large-6 columns">
+                        <label>
+                            <input type="checkbox" name="embed_geojson_link"
+                                   {% if settings.embed_geojson_link == 'on' %}checked{% endif %}>
+                            {% trans "GeoJSON Link Element" %}
+                        </label>
+                        <p class="help-text">
+                            {% trans "Include a link to the GeoJSON API endpoint in the HTML head." %}
+                        </p>
+                    </div>
+                </div>
+
+                <hr>
+
+                <div class="row">
+                    <div class="large-12 columns">
+                        <h4>{% trans "Map Colour Coding" %}</h4>
+                        <p class="help-text">
+                            {% trans "Colour-code geometries on aggregated maps (journal and press map pages) by issue or journal." %}
+                            {% trans "Palettes from:" %}
+                            <a href="https://colorbrewer2.org/" target="_blank" rel="noopener">ColorBrewer</a>,
+                            <a href="https://leonawicz.github.io/trekcolors/" target="_blank" rel="noopener">trekcolors</a>.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="large-3 columns">
+                        <label>
+                            <input type="checkbox" name="enable_map_colours"
+                                   {% if settings.enable_map_colours == 'on' %}checked{% endif %}>
+                            {% trans "Enable Colour Coding" %}
+                        </label>
+                        <p class="help-text">
+                            {% trans "Assign colours to markers and geometries based on their grouping (issue on journal maps, journal on press maps)." %}
+                        </p>
+                    </div>
+                    <div class="large-3 columns">
+                        <label>{% trans "Colour Method" %}
+                            <select name="map_colour_method" id="id_map_colour_method"
+                                    onchange="geometadataColourMethodChanged()">
+                                <option value="colorbrewer" {% if settings.map_colour_method == 'colorbrewer' %}selected{% endif %}>
+                                    ColorBrewer
+                                </option>
+                                <option value="startrek" {% if settings.map_colour_method == 'startrek' %}selected{% endif %}>
+                                    Star Trek
+                                </option>
+                                <option value="custom" {% if settings.map_colour_method == 'custom' %}selected{% endif %}>
+                                    {% trans "Custom Colours" %}
+                                </option>
+                            </select>
+                        </label>
+                        <p class="help-text">
+                            {% trans "Choose a preset palette or define your own colours." %}
+                        </p>
+                    </div>
+                    <div class="large-3 columns" id="colorbrewer-options"
+                         {% if settings.map_colour_method != 'colorbrewer' %}style="display:none"{% endif %}>
+                        <label>{% trans "Colour Palette" %}
+                            <select name="map_colour_scheme" id="id_map_colour_scheme"
+                                    onchange="geometadataSchemeChanged()">
+                                <option value="Set1" {% if settings.map_colour_scheme == 'Set1' %}selected{% endif %}>Set1 (9)</option>
+                                <option value="Set2" {% if settings.map_colour_scheme == 'Set2' %}selected{% endif %}>Set2 (8)</option>
+                                <option value="Set3" {% if settings.map_colour_scheme == 'Set3' %}selected{% endif %}>Set3 (12)</option>
+                                <option value="Paired" {% if settings.map_colour_scheme == 'Paired' %}selected{% endif %}>Paired (12)</option>
+                                <option value="Dark2" {% if settings.map_colour_scheme == 'Dark2' %}selected{% endif %}>Dark2 (8)</option>
+                                <option value="Accent" {% if settings.map_colour_scheme == 'Accent' %}selected{% endif %}>Accent (8)</option>
+                                <option value="Pastel1" {% if settings.map_colour_scheme == 'Pastel1' %}selected{% endif %}>Pastel1 (9)</option>
+                                <option value="Pastel2" {% if settings.map_colour_scheme == 'Pastel2' %}selected{% endif %}>Pastel2 (8)</option>
+                                <option value="Spectral" {% if settings.map_colour_scheme == 'Spectral' %}selected{% endif %}>Spectral (8)</option>
+                                <option value="RdYlBu" {% if settings.map_colour_scheme == 'RdYlBu' %}selected{% endif %}>RdYlBu (8)</option>
+                            </select>
+                        </label>
+                        <p class="help-text">
+                            {% trans "Colour palette from" %} <a href="https://colorbrewer2.org/" target="_blank" rel="noopener">ColorBrewer 2.0</a>.
+                            {% trans "Qualitative schemes (Set1, Set2, Dark2) are recommended." %}
+                        </p>
+                    </div>
+                    <div class="large-3 columns" id="startrek-options"
+                         {% if settings.map_colour_method != 'startrek' %}style="display:none"{% endif %}>
+                        <label>{% trans "Colour Palette" %}
+                            <select name="map_colour_scheme" id="id_startrek_scheme"
+                                    onchange="geometadataStartrekSchemeChanged()">
+                                <optgroup label="{% trans 'Species & Factions' %}">
+                                    <option value="starfleet">Starfleet (3)</option>
+                                    <option value="starfleet2">Starfleet Extended (6)</option>
+                                    <option value="klingon">Klingon Empire (8)</option>
+                                    <option value="romulan">Romulan Star Empire (3)</option>
+                                    <option value="romulan2">Romulan Alt (3)</option>
+                                    <option value="andorian">Andorian (4)</option>
+                                    <option value="bajoran">Bajoran (6)</option>
+                                    <option value="borg">Borg Collective (2)</option>
+                                    <option value="breen">Breen Confederacy (8)</option>
+                                    <option value="breen2">Breen Alt (5)</option>
+                                    <option value="dominion">Dominion (7)</option>
+                                    <option value="ferengi">Ferengi Alliance (3)</option>
+                                    <option value="gorn">Gorn Hegemony (9)</option>
+                                    <option value="tholian">Tholian Assembly (5)</option>
+                                    <option value="terran">Terran Empire (4)</option>
+                                    <option value="ufp">United Federation of Planets (2)</option>
+                                </optgroup>
+                                <optgroup label="LCARS">
+                                    <option value="lcars_2357">LCARS 2357 TNG Early (9)</option>
+                                    <option value="lcars_2369">LCARS 2369 TNG/DS9 (8)</option>
+                                    <option value="lcars_2375">LCARS 2375 DS9 Late (8)</option>
+                                    <option value="lcars_2379">LCARS 2379 Nemesis Era (8)</option>
+                                    <option value="lcars_alt">LCARS Alternative (17)</option>
+                                    <option value="lcars_first_contact">LCARS First Contact (8)</option>
+                                    <option value="lcars_nemesis">LCARS Nemesis (10)</option>
+                                    <option value="lcars_nx01">LCARS NX-01 Enterprise (6)</option>
+                                    <option value="lcars_29c">LCARS 29th Century (8)</option>
+                                    <option value="lcars_23c">LCARS 23rd Century (7)</option>
+                                    <option value="lcars_red_alert">LCARS Red Alert (8)</option>
+                                    <option value="lcars_cardassian">LCARS Cardassian (21)</option>
+                                </optgroup>
+                                <optgroup label="{% trans 'Alert Modes' %}">
+                                    <option value="red_alert">Red Alert (6)</option>
+                                    <option value="yellow_alert">Yellow Alert (6)</option>
+                                    <option value="black_alert">Black Alert Discovery (5)</option>
+                                </optgroup>
+                            </select>
+                        </label>
+                        <p class="help-text">
+                            {% trans "Palettes from" %} <a href="https://leonawicz.github.io/trekcolors/" target="_blank" rel="noopener">trekcolors</a>.
+                        </p>
+                    </div>
+                    <div class="large-6 columns" id="custom-colours-options"
+                         {% if settings.map_colour_method != 'custom' %}style="display:none"{% endif %}>
+                        <label>{% trans "Custom Colours" %}
+                            <textarea name="custom_colours" id="id_custom_colours"
+                                      rows="6" placeholder="#3388ff&#10;#ff6600&#10;#33cc33"
+                                      onchange="geometadataCustomColoursChanged()"
+                                      oninput="geometadataCustomColoursChanged()">{{ settings.custom_colours|default:'' }}</textarea>
+                        </label>
+                        <p class="help-text">
+                            {% trans "Enter one HTML colour code per line (e.g., #3388ff or rgb(51,136,255))." %}
+                        </p>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="large-12 columns">
+                        <label>{% trans "Colour Palette Preview" %}</label>
+                        <div id="colour-palette-preview" style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;">
+                        </div>
+                        <input type="hidden" name="map_colour_palette" id="id_map_colour_palette"
+                               value="{{ settings.map_colour_palette|default:'' }}">
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="large-6 columns">
+                        <label>{% trans "Map Feature Colour" %}
+                            <div class="input-group">
+                                <span class="input-group-label" id="article-colour-swatch" style="width:40px;height:2.4375rem;background:{{ settings.article_map_colour|default:'#3388ff' }};border:1px solid #ccc;"></span>
+                                <input type="text" class="input-group-field" name="article_map_colour"
+                                       id="id_article_map_colour"
+                                       value="{{ settings.article_map_colour|default:'#3388ff' }}"
+                                       placeholder="#3388ff"
+                                       onchange="geometadataArticleColourChanged()"
+                                       oninput="geometadataArticleColourChanged()">
+                                <div class="input-group-button">
+                                    <select id="id_article_map_colour_palette" onchange="geometadataArticleColourFromPalette()">
+                                        <option value="">{% trans "From palette..." %}</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </label>
+                        <p class="help-text">
+                            {% trans "Colour for map features on article and issue pages (when colour coding is disabled)." %}
+                        </p>
+                    </div>
+                    <div class="large-6 columns">
+                        <label>{% trans "Map Feature Opacity" %}
+                            <input type="number" name="map_feature_opacity"
+                                   id="id_map_feature_opacity"
+                                   value="{{ settings.map_feature_opacity|default:'0.7' }}"
+                                   min="0.1" max="1.0" step="0.1"
+                                   placeholder="0.7">
+                        </label>
+                        <p class="help-text">
+                            {% trans "Opacity of map features (0.1-1.0). Lower values blend better with darker basemaps." %}
+                        </p>
+                    </div>
+                </div>
+
+                <hr>
+
+                <div class="row">
+                    <div class="large-12 columns">
+                        <h4>{% trans "Map Settings" %}</h4>
+                        <p class="help-text">
+                            {% trans "Configure the basemap and default view for all maps in this journal/repository." %}
+                            <a href="https://leaflet-extras.github.io/leaflet-providers/preview/" target="_blank" rel="noopener">
+                                {% trans "Preview all available basemaps" %} <i class="fa fa-external-link"></i>
+                            </a>
+                        </p>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="large-6 columns">
+                        <label>{% trans "Basemap Provider" %}
+                            <select name="map_tile_provider" id="basemap-provider-select">
+                                {% for key, provider in basemap_providers.items %}
+                                <option value="{{ key }}"
+                                        data-attribution="{{ provider.attribution }}"
+                                        {% if settings.map_tile_provider == key %}selected{% endif %}>
+                                    {{ provider.label }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </label>
+                    </div>
+                    <div class="large-6 columns">
+                        <label>{% trans "Attribution Preview" %}</label>
+                        <div id="basemap-attribution-preview" class="callout secondary" style="font-size: 0.85em; padding: 0.5rem;">
+                            {% for key, provider in basemap_providers.items %}
+                                {% if settings.map_tile_provider == key %}{{ provider.attribution|safe }}{% endif %}
+                            {% empty %}
+                                &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="large-4 columns">
+                        <label>{% trans "Default Latitude" %}
+                            <input type="text" name="default_map_lat" id="id_default_map_lat"
+                                   value="{{ settings.default_map_lat|default:'0' }}"
+                                   placeholder="0">
+                        </label>
+                        <p class="help-text">{% trans "Default center latitude (-90 to 90)" %}</p>
+                    </div>
+                    <div class="large-4 columns">
+                        <label>{% trans "Default Longitude" %}
+                            <input type="text" name="default_map_lng" id="id_default_map_lng"
+                                   value="{{ settings.default_map_lng|default:'0' }}"
+                                   placeholder="0">
+                        </label>
+                        <p class="help-text">{% trans "Default center longitude (-180 to 180)" %}</p>
+                    </div>
+                    <div class="large-4 columns">
+                        <label>{% trans "Default Zoom Level" %}
+                            <input type="text" name="default_map_zoom" id="id_default_map_zoom"
+                                   value="{{ settings.default_map_zoom|default:'2' }}"
+                                   placeholder="2">
+                        </label>
+                        <p class="help-text">{% trans "Default zoom level (1-18)" %}</p>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="large-12 columns">
+                        <label>{% trans "Map Preview" %}</label>
+                        <div id="map-settings-preview" style="height: 300px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 1rem;"></div>
+                        <p class="help-text" style="clear: both;">{% trans "Preview of the default map view. Changing settings above updates this preview." %}</p>
+                    </div>
+                </div>
+
+                <hr>
+
+                <div class="row">
+                    <div class="large-12 columns">
+                        <h4>{% trans "Reverse Geocoding" %}</h4>
+                        <p class="help-text">
+                            {% trans "Allow editors to automatically derive place names and administrative units from drawn geometries." %}
+                        </p>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="large-3 columns">
+                        <label>
+                            <input type="checkbox" name="geocoding_enabled"
+                                   {% if settings.geocoding_enabled == 'on' %}checked{% endif %}>
+                            {% trans "Enable Reverse Geocoding" %}
+                        </label>
+                    </div>
+                    <div class="large-3 columns">
+                        <label>{% trans "Geocoding Provider" %}
+                            <select name="geocoding_provider" id="id_geocoding_provider"
+                                    onchange="geometadataGeocodingProviderChanged()">
+                                <option value="nominatim" {% if settings.geocoding_provider == 'nominatim' %}selected{% endif %}>Nominatim (OpenStreetMap)</option>
+                                <option value="photon" {% if settings.geocoding_provider == 'photon' %}selected{% endif %}>Photon</option>
+                                <option value="geonames" {% if settings.geocoding_provider == 'geonames' %}selected{% endif %}>GeoNames</option>
+                            </select>
+                        </label>
+                    </div>
+                    <div class="large-3 columns">
+                        <label>{% trans "User Agent" %}
+                            <input type="text" name="geocoding_user_agent"
+                                   value="{{ settings.geocoding_user_agent|default:'janeway-geometadata' }}"
+                                   placeholder="janeway-geometadata">
+                        </label>
+                        <p class="help-text">{% trans "Identifies your instance to Nominatim/Photon." %}</p>
+                    </div>
+                    <div class="large-3 columns">
+                        <label>{% trans "GeoNames Username" %}
+                            <input type="text" name="geocoding_geonames_username"
+                                   id="id_geocoding_geonames_username"
+                                   value="{{ settings.geocoding_geonames_username|default:'' }}"
+                                   placeholder=""
+                                   {% if settings.geocoding_provider != 'geonames' %}disabled{% endif %}>
+                        </label>
+                        <p class="help-text">{% trans "Required for GeoNames provider." %} <a href="https://www.geonames.org/login" target="_blank" rel="noopener">{% trans "Register" %}</a></p>
+                    </div>
+                </div>
+
+                <hr>
+
+                <div class="row">
+                    <div class="large-12 columns">
+                        <button type="submit" class="button success">
+                            <i class="fa fa-save"></i> {% trans "Save Settings" %}
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="box">
+        <div class="title-area">
+            <h2>{% trans "Data Privacy and Tile Servers" %}</h2>
+        </div>
+        <div class="content">
+            <p>
+                {% trans "When maps are displayed, the user's browser connects directly to an external tile server to load map images. No map tile data is proxied through this server." %}
+            </p>
+            <p>
+                {% trans "The tile provider receives the user's IP address, browser user agent, and the geographic extent of the requested map area." %}
+            </p>
+            <div class="callout secondary">
+                <p>
+                    <i class="fa fa-info-circle"></i>
+                    {% trans "The privacy information below applies to the default basemap (OpenStreetMap). If you select a different basemap provider in the Map Settings above, you must research and reference the appropriate privacy policy for that provider." %}
+                </p>
+                <p>
+                    {% trans "The attribution text shown in the Map Settings section can help identify the tile provider and find their privacy documentation." %}
+                </p>
+            </div>
+            <p>
+                <strong>{% trans "Default tile server:" %}</strong> OpenStreetMap Foundation (OSMF)<br>
+                <strong>{% trans "Privacy policy:" %}</strong> <a href="https://wiki.osmfoundation.org/wiki/Privacy_Policy" target="_blank" rel="noopener">wiki.osmfoundation.org/wiki/Privacy_Policy</a><br>
+                <strong>{% trans "Tile usage policy:" %}</strong> <a href="https://operations.osmfoundation.org/policies/tiles/" target="_blank" rel="noopener">operations.osmfoundation.org/policies/tiles/</a>
+            </p>
+            <div class="callout warning">
+                <p>
+                    {% trans "If your journal displays maps to visitors, your data privacy statement should inform users about the external tile service connection. When using a non-default basemap provider, update your privacy statement to reference that specific provider's policies." %}
+                </p>
+            </div>
+        </div>
+    </div>
+
+    {% if has_journal or has_repository %}
+    <div class="box">
+        <div class="title-area">
+            <h2>{% trans "Statistics" %}</h2>
+        </div>
+        <div class="content">
+            <div class="row">
+                {% if has_journal %}
+                <div class="{% if has_repository %}large-6{% else %}large-12{% endif %} columns">
+                    <div class="callout">
+                        <h5>{% trans "Articles with Geometadata" %}</h5>
+                        <p class="stat-number">{{ article_count }} / {{ total_article_count }}</p>
+                    </div>
+                </div>
+                {% endif %}
+                {% if has_repository %}
+                <div class="{% if has_journal %}large-6{% else %}large-12{% endif %} columns">
+                    <div class="callout">
+                        <h5>{% trans "Preprints with Geometadata" %}</h5>
+                        <p class="stat-number">{{ preprint_count }} / {{ total_preprint_count }}</p>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            <div class="row">
+                <div class="large-12 columns">
+                    <a href="{% url 'geometadata_curation_queue' %}" class="button">
+                        <i class="fa fa-list-ul"></i> {% trans "Curation Queue" %}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block js %}
+<script src="{% static 'geometadata/js/leaflet.js' %}"></script>
+<script src="{% static 'geometadata/js/leaflet-providers.js' %}"></script>
+<script src="{% static 'geometadata/js/colorbrewer.js' %}"></script>
+<script src="{% static 'geometadata/js/startrek-palettes.js' %}"></script>
+<script>
+(function() {
+    'use strict';
+
+    var groupCount = {{ group_count|default:"0" }};
+    var siteSeed = '{{ site_seed|escapejs }}';
+
+    // --- Preview rendering ---
+    function renderPreview(palette) {
+        var container = document.getElementById('colour-palette-preview');
+        container.innerHTML = '';
+        if (!palette || !palette.length) return;
+        for (var i = 0; i < palette.length; i++) {
+            var swatch = document.createElement('span');
+            swatch.style.cssText = 'display:inline-block;width:24px;height:24px;border-radius:3px;border:1px solid #ccc;background:' + palette[i];
+            swatch.title = palette[i];
+            container.appendChild(swatch);
+        }
+    }
+
+    // --- Check if palette already exists ---
+    function hasPalette() {
+        var field = document.getElementById('id_map_colour_palette');
+        return field && field.value && field.value.length > 2;
+    }
+
+    // --- Confirm before replacing palette ---
+    function confirmPaletteReplace(callback) {
+        if (!hasPalette()) {
+            callback();
+            return;
+        }
+        if (confirm('{% trans "A colour palette already exists. Replacing it will lose the current colours. Continue?" %}')) {
+            callback();
+        }
+    }
+
+    // --- ColorBrewer: resolve scheme from JS object ---
+    function resolveColorBrewerPalette() {
+        var schemes = window.COLORBREWER_SCHEMES || {};
+        var sel = document.getElementById('id_map_colour_scheme');
+        var schemeName = sel ? sel.value : 'Set2';
+        return schemes[schemeName] || [];
+    }
+
+    // --- Star Trek: resolve palette from JS object ---
+    function resolveStartrekPalette() {
+        var palettes = window.STARTREK_PALETTES || {};
+        var sel = document.getElementById('id_startrek_scheme');
+        var paletteName = sel ? sel.value : 'lcars_2369';
+        return palettes[paletteName] || [];
+    }
+
+    // --- Custom colours: parse from textarea ---
+    function parseCustomColours() {
+        var textarea = document.getElementById('id_custom_colours');
+        if (!textarea || !textarea.value.trim()) return [];
+
+        var lines = textarea.value.split('\n');
+        var colours = [];
+        var colourPattern = /^(#[0-9a-fA-F]{3,8}|rgb\([^)]+\)|rgba\([^)]+\)|[a-zA-Z]+)$/;
+
+        for (var i = 0; i < lines.length; i++) {
+            var colour = lines[i].trim();
+            if (colour && colourPattern.test(colour)) {
+                colours.push(colour);
+            }
+        }
+        return colours;
+    }
+
+    // --- Store palette in hidden field ---
+    function storePalette(palette) {
+        var field = document.getElementById('id_map_colour_palette');
+        field.value = JSON.stringify(palette);
+        renderPreview(palette);
+        updateArticleColourPaletteDropdown();
+    }
+
+    // --- Update visibility of method-specific options ---
+    function updateMethodVisibility(method) {
+        document.getElementById('colorbrewer-options').style.display =
+            method === 'colorbrewer' ? '' : 'none';
+        document.getElementById('startrek-options').style.display =
+            method === 'startrek' ? '' : 'none';
+        document.getElementById('custom-colours-options').style.display =
+            method === 'custom' ? '' : 'none';
+    }
+
+    // --- Public callbacks ---
+    window.geometadataColourMethodChanged = function() {
+        var method = document.getElementById('id_map_colour_method').value;
+        updateMethodVisibility(method);
+
+        if (method === 'colorbrewer') {
+            storePalette(resolveColorBrewerPalette());
+        } else if (method === 'startrek') {
+            storePalette(resolveStartrekPalette());
+        } else if (method === 'custom') {
+            storePalette(parseCustomColours());
+        }
+    };
+
+    window.geometadataSchemeChanged = function() {
+        storePalette(resolveColorBrewerPalette());
+    };
+
+    window.geometadataStartrekSchemeChanged = function() {
+        storePalette(resolveStartrekPalette());
+    };
+
+    window.geometadataCustomColoursChanged = function() {
+        storePalette(parseCustomColours());
+    };
+
+    // --- Article map colour functions ---
+    function updateArticleColourPreview(colour) {
+        var swatch = document.getElementById('article-colour-swatch');
+        if (swatch) swatch.style.background = colour;
+    }
+
+    function updateArticleColourPaletteDropdown() {
+        var select = document.getElementById('id_article_map_colour_palette');
+        if (!select) return;
+
+        // Clear existing options except the first placeholder
+        while (select.options.length > 1) {
+            select.remove(1);
+        }
+
+        // Get current palette
+        var paletteField = document.getElementById('id_map_colour_palette');
+        if (!paletteField || !paletteField.value) return;
+
+        try {
+            var palette = JSON.parse(paletteField.value);
+            if (Array.isArray(palette)) {
+                for (var i = 0; i < palette.length; i++) {
+                    var option = document.createElement('option');
+                    option.value = palette[i];
+                    option.textContent = palette[i];
+                    option.style.background = palette[i];
+                    option.style.color = isLightColour(palette[i]) ? '#000' : '#fff';
+                    select.appendChild(option);
+                }
+            }
+        } catch (e) {
+            console.error('Error parsing palette:', e);
+        }
+    }
+
+    function isLightColour(colour) {
+        // Simple luminance check for hex colours
+        if (!colour || colour[0] !== '#') return false;
+        var hex = colour.slice(1);
+        if (hex.length === 3) {
+            hex = hex[0]+hex[0]+hex[1]+hex[1]+hex[2]+hex[2];
+        }
+        var r = parseInt(hex.slice(0,2), 16);
+        var g = parseInt(hex.slice(2,4), 16);
+        var b = parseInt(hex.slice(4,6), 16);
+        var luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+        return luminance > 0.5;
+    }
+
+    window.geometadataArticleColourChanged = function() {
+        var input = document.getElementById('id_article_map_colour');
+        if (input && input.value) {
+            updateArticleColourPreview(input.value);
+        }
+    };
+
+    window.geometadataArticleColourFromPalette = function() {
+        var select = document.getElementById('id_article_map_colour_palette');
+        var input = document.getElementById('id_article_map_colour');
+        if (select && select.value && input) {
+            input.value = select.value;
+            updateArticleColourPreview(select.value);
+            select.value = ''; // Reset dropdown
+        }
+    };
+
+    // --- Geocoding provider change: enable/disable GeoNames username ---
+    window.geometadataGeocodingProviderChanged = function() {
+        var provider = document.getElementById('id_geocoding_provider').value;
+        var usernameField = document.getElementById('id_geocoding_geonames_username');
+        if (usernameField) {
+            usernameField.disabled = (provider !== 'geonames');
+        }
+    };
+
+    // --- Map Preview ---
+    var previewMap = null;
+    var previewTileLayer = null;
+
+    function initMapPreview() {
+        var container = document.getElementById('map-settings-preview');
+        if (!container || typeof L === 'undefined') return;
+
+        var lat = parseFloat(document.getElementById('id_default_map_lat').value) || 0;
+        var lng = parseFloat(document.getElementById('id_default_map_lng').value) || 0;
+        var zoom = parseInt(document.getElementById('id_default_map_zoom').value) || 2;
+
+        previewMap = L.map('map-settings-preview', {
+            center: [lat, lng],
+            zoom: zoom
+        });
+
+        // Get initial provider
+        var providerSelect = document.getElementById('basemap-provider-select');
+        var providerKey = providerSelect ? providerSelect.value : 'OpenStreetMap.Mapnik';
+
+        previewTileLayer = L.tileLayer.provider(providerKey).addTo(previewMap);
+    }
+
+    function updateMapPreviewBasemap() {
+        if (!previewMap || !previewTileLayer) return;
+
+        var providerSelect = document.getElementById('basemap-provider-select');
+        var providerKey = providerSelect ? providerSelect.value : 'OpenStreetMap.Mapnik';
+
+        // Update attribution preview text
+        var preview = document.getElementById('basemap-attribution-preview');
+        if (preview && providerSelect) {
+            var option = providerSelect.options[providerSelect.selectedIndex];
+            preview.innerHTML = option.getAttribute('data-attribution') || '';
+        }
+
+        // Replace tile layer
+        previewMap.removeLayer(previewTileLayer);
+        previewTileLayer = L.tileLayer.provider(providerKey).addTo(previewMap);
+    }
+
+    function updateMapPreviewView() {
+        if (!previewMap) return;
+
+        var lat = parseFloat(document.getElementById('id_default_map_lat').value) || 0;
+        var lng = parseFloat(document.getElementById('id_default_map_lng').value) || 0;
+        var zoom = parseInt(document.getElementById('id_default_map_zoom').value) || 2;
+
+        // Clamp values to valid ranges
+        lat = Math.max(-90, Math.min(90, lat));
+        lng = Math.max(-180, Math.min(180, lng));
+        zoom = Math.max(1, Math.min(18, zoom));
+
+        previewMap.setView([lat, lng], zoom);
+    }
+
+    // --- Init on load ---
+    document.addEventListener('DOMContentLoaded', function() {
+        // Render existing palette from stored setting
+        var storedField = document.getElementById('id_map_colour_palette');
+        var stored = storedField.value;
+        if (stored) {
+            try {
+                renderPreview(JSON.parse(stored));
+                updateArticleColourPaletteDropdown();
+            } catch (e) { /* ignore */ }
+        } else {
+            // No palette stored yet — generate from current method
+            var method = document.getElementById('id_map_colour_method').value;
+            if (method === 'colorbrewer') {
+                storePalette(resolveColorBrewerPalette());
+            } else if (method === 'startrek') {
+                storePalette(resolveStartrekPalette());
+            } else if (method === 'custom') {
+                storePalette(parseCustomColours());
+            }
+        }
+
+        // Set initial Star Trek scheme selection from stored value
+        var startrekSelect = document.getElementById('id_startrek_scheme');
+        var colourScheme = '{{ settings.map_colour_scheme|default:"lcars_2369"|escapejs }}';
+        if (startrekSelect && window.STARTREK_PALETTES && window.STARTREK_PALETTES[colourScheme]) {
+            startrekSelect.value = colourScheme;
+        }
+
+        // Ensure GeoNames field state is correct on load
+        geometadataGeocodingProviderChanged();
+
+        // Initialize map preview
+        initMapPreview();
+
+        // Bind basemap provider change to map preview update
+        var basemapSelect = document.getElementById('basemap-provider-select');
+        if (basemapSelect) {
+            basemapSelect.addEventListener('change', updateMapPreviewBasemap);
+        }
+
+        // Bind default view settings to map preview update
+        var latInput = document.getElementById('id_default_map_lat');
+        var lngInput = document.getElementById('id_default_map_lng');
+        var zoomInput = document.getElementById('id_default_map_zoom');
+
+        if (latInput) latInput.addEventListener('change', updateMapPreviewView);
+        if (lngInput) lngInput.addEventListener('change', updateMapPreviewView);
+        if (zoomInput) zoomInput.addEventListener('change', updateMapPreviewView);
+    });
+})();
+</script>
+{% endblock %}

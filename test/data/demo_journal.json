@@ -1,0 +1,21 @@
+{
+  "code": "dqj",
+  "name": "Delta Quadrant Journal",
+  "description": "A demo journal for testing the Geoetadata plugin in Janeway, featuring articles with geographic and temporal metadata.",
+  "contact_info": "demo@example.com",
+  "issn": "",
+  "is_remote": false,
+  "is_conference": false,
+  "settings": {
+    "journal_name": "Delta Quadrant Journal",
+    "journal_issn": "",
+    "print_issn": "",
+    "publisher_name": "KOMET Demo Publisher",
+    "publisher_url": "https://projects.tib.eu/komet/",
+    "journal_description": "A demonstration journal showcasing geographic and temporal metadata capabilities for scholarly articles.",
+    "maintenance_mode": false,
+    "submission_checklist": "- Geographic metadata is encouraged for all submissions\n- Temporal coverage should be specified where applicable",
+    "copyright_notice": "This is demo content. Original articles are subject to their respective copyright notices.",
+    "enable_editorial_images_on_article_cards": false
+  }
+}

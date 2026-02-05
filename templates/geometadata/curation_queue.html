@@ -1,0 +1,120 @@
+{% extends "admin/core/base.html" %}
+{% load static i18n %}
+
+{% block title %}{% trans "Curation Queue" %}{% endblock %}
+
+{% block breadcrumbs %}
+    {{ block.super }}
+    <li><a href="{% url 'geometadata_manager' %}">{% trans "Geometadata" %}</a></li>
+    <li><a href="{% url 'geometadata_curation_queue' %}">{% trans "Curation Queue" %}</a></li>
+{% endblock %}
+
+{% block body %}
+<div class="large-12 columns">
+    <div class="box">
+        <div class="title-area">
+            <h2>{% trans "Curation Queue" %}</h2>
+        </div>
+        <div class="content">
+            <p>
+                {% trans "Work through articles and add missing geospatial/temporal metadata. Articles with existing geometadata are marked with a green check." %}
+            </p>
+
+            <div class="row" style="margin-bottom: 1rem;">
+                <div class="large-6 columns">
+                    <strong>{% trans "Progress" %}:</strong>
+                    {{ done_count }} / {{ total_count }}
+                </div>
+                <div class="large-6 columns text-right">
+                    {% if hide_done %}
+                        <a href="{% url 'geometadata_curation_queue' %}" class="button small secondary">
+                            {% trans "Show All" %}
+                        </a>
+                    {% else %}
+                        <a href="{% url 'geometadata_curation_queue' %}?hide_done=1" class="button small secondary">
+                            {% trans "Hide Completed" %}
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if page.object_list %}
+            <table class="scroll">
+                <thead>
+                    <tr>
+                        <th style="width: 3rem;">{% trans "Status" %}</th>
+                        <th>{% trans "Title" %}</th>
+                        <th>{% trans "Stage" %}</th>
+                        <th>{% trans "Published" %}</th>
+                        <th style="width: 6rem;"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in page.object_list %}
+                    <tr>
+                        <td style="text-align: center;">
+                            {% if item.has_geometadata %}
+                                <i class="fa fa-check-circle" style="color: green;" title="{% trans 'Has geometadata' %}"></i>
+                            {% else %}
+                                <i class="fa fa-circle-o" style="color: #999;" title="{% trans 'Missing geometadata' %}"></i>
+                            {% endif %}
+                        </td>
+                        <td>{{ item.title|truncatewords:12 }}</td>
+                        <td><span class="label">{{ item.stage }}</span></td>
+                        <td>
+                            {% if item.date_published %}
+                                {{ item.date_published|date:"Y-m-d" }}
+                            {% else %}
+                                —
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url item.edit_url_name item.pk %}"
+                               class="button tiny">
+                                <i class="fa fa-pencil"></i> {% trans "Edit" %}
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            {% if page.has_other_pages %}
+            <div class="text-center">
+                <ul class="pagination" role="navigation">
+                    {% if page.has_previous %}
+                        <li class="pagination-previous">
+                            <a href="?page={{ page.previous_page_number }}{% if hide_done %}&hide_done=1{% endif %}">{% trans "Previous" %}</a>
+                        </li>
+                    {% endif %}
+
+                    {% for num in page.paginator.page_range %}
+                        {% if num == page.number %}
+                            <li class="current"><span>{{ num }}</span></li>
+                        {% else %}
+                            <li><a href="?page={{ num }}{% if hide_done %}&hide_done=1{% endif %}">{{ num }}</a></li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if page.has_next %}
+                        <li class="pagination-next">
+                            <a href="?page={{ page.next_page_number }}{% if hide_done %}&hide_done=1{% endif %}">{% trans "Next" %}</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+            {% endif %}
+
+            {% else %}
+            <div class="callout success">
+                {% if hide_done %}
+                    {% trans "All articles have geometadata. Nothing left to curate." %}
+                {% else %}
+                    {% trans "No articles found." %}
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

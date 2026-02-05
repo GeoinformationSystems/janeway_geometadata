@@ -1,0 +1,9 @@
+{% load i18n %}
+{# Link to geometadata editing shown in editor actions during review workflow #}
+{% if show_link %}
+<li>
+    <a href="{{ edit_url }}">
+        <i class="fa fa-globe action-icon">&nbsp;</i>{% trans "Edit Geometadata" %}
+    </a>
+</li>
+{% endif %}

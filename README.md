@@ -77,6 +77,11 @@ journals/repositories and can be overridden per journal.
 |---|---|---|
 | Show Temporal Coverage on Issue Pages | on | Display aggregated temporal coverage on issue landing pages |
 
+> **Note:** Issue page features require the `issue_footer_block` hook which is
+> not present in standard Janeway. See [Template Requirements](#template-requirements)
+> below. The settings page will detect if the hook is missing and disable
+> these settings with an explanatory message.
+
 ### Downloads
 
 | Setting | Default | Description |
@@ -106,9 +111,11 @@ issue or journal.
 | Setting | Default | Description |
 |---|---|---|
 | Enable Colour Coding | off | Assign colours to markers and geometries based on their grouping (issue on journal maps, journal on press maps) |
-| Colour Method | `scheme` | How to generate the palette: `scheme` (ColorBrewer), `generate` (iwanthue algorithm) |
-| Colour Scheme | `Set1` | ColorBrewer palette name (Set1, Set2, Dark2, etc.). Qualitative schemes recommended. |
-| Colour Palette | _(auto)_ | JSON array of hex colours. Auto-populated when using a scheme or generating. |
+| Colour Method | `colorbrewer` | How to generate the palette: `colorbrewer` (ColorBrewer schemes), `startrek` (Star Trek themed palettes), `custom` (enter your own colours) |
+| Colour Scheme | `Set2` | Palette name for the selected method. Qualitative schemes recommended for categorical data. |
+| Custom Colours | _(empty)_ | One HTML colour code per line (e.g., `#3388ff`). Used when method is `custom`. |
+| Colour Palette | _(auto)_ | JSON array of hex colours. Auto-populated from the selected method/scheme. |
+| Map Feature Colour | `#3388ff` | Colour for map features on article and issue pages (when colour coding is disabled). Enter a hex code or select from the palette. |
 
 ### Map Basemap
 
@@ -209,16 +216,72 @@ Example paragraph (adapt to your tile provider and legal requirements):
 > details, see the
 > [OSMF Privacy Policy](https://wiki.osmfoundation.org/wiki/Privacy_Policy).
 
+## Template Requirements
+
+Some plugin features require hooks that are not present in standard Janeway
+templates. The plugin's settings page automatically detects which hooks are
+available and disables settings that cannot function without them.
+
+### Standard Hooks (No Changes Required)
+
+These hooks are present in all Janeway themes out of the box:
+
+| Hook | Purpose |
+|---|---|
+| `article_footer_block` | Display maps on article/preprint pages |
+| `nav_block` | Add navigation link to map page |
+| `base_head_css` | Inject Leaflet CSS and custom styling |
+| `in_review_editor_actions` | Display link to geometadata editing in editor review workflow |
+
+### Non-Standard Hooks (Template Modification Required)
+
+These hooks require adding a single line to your theme templates:
+
+| Hook | Template File | Purpose |
+|---|---|---|
+| `issue_footer_block` | `journal/issue_display.html` | Display aggregated map and temporal coverage on issue pages |
+
+### Adding the issue_footer_block Hook
+
+To enable issue page features, add the following line to your theme's
+`journal/issue_display.html` template, typically after the issue article list:
+
+```django
+{% load hooks %}{% hook 'issue_footer_block' %}
+```
+
+For all three standard themes (OLH, material, clean), the recommended location
+is after the `{% include "elements/journal/issue_block.html" %}` line:
+
+```django
+{% include "elements/journal/issue_block.html" %}
+{% load hooks %}{% hook 'issue_footer_block' %}
+```
+
+After adding this line to your theme templates, the issue page settings
+(Show Temporal Coverage on Issue Pages) will become available in the
+plugin settings.
+
 ## Usage
 
 ### For Editors
 
-1. Navigate to an article or preprint in the manager
-2. Click "Edit Geometadata" link
-3. Draw shapes on the map or paste WKT geometry
-4. Add place name and administrative units
-5. Add temporal information (start date, end date, description)
-6. Save
+Editors can access geometadata editing from multiple locations:
+
+| Access Point | Description |
+|---|---|
+| **Review Workflow** | Click "Edit Geometadata" button in the editor actions during article review |
+| **Curation Queue** | Navigate to `/plugins/geometadata/curation-queue/` for a list of all articles with their geometadata status |
+| **Direct URL** | Access editing directly at `/plugins/geometadata/edit/article/<article_id>/` |
+| **Article Archive Page** | The "Edit Geometadata" link appears on the article's archive/management page |
+
+**Editing geometadata:**
+
+1. Navigate to the geometadata editing page via any of the methods above
+2. Draw shapes on the map or paste WKT geometry in the text field
+3. Use "Lookup Location Names" to auto-fill place name and administrative units
+4. Add temporal information (start date, end date) for relevant time periods
+5. Save
 
 ### API Endpoints
 
@@ -402,6 +465,59 @@ This keeps all vendor files (`leaflet.js`, `leaflet.draw.js`,
   `locales/` (not `locale/`) and placed in the plugin root.
 
 ## Development
+
+### Demo Data
+
+The plugin includes a management command to load demo data for testing and
+development. The demo data is based on articles from the
+[OJS geoMetadata Demo Journal](https://service.tib.eu/komet/ojs330/index.php/gmdj).
+
+**Loading demo data:**
+
+```bash
+# Create the demo journal and load all data (recommended for fresh installs)
+python3 manage.py load_geometadata_demo --create-journal
+
+# Load into an existing journal
+python3 manage.py load_geometadata_demo --journal-code=geodemo
+
+# Include placeholder PDF galleys
+python3 manage.py load_geometadata_demo --create-journal --with-galleys
+
+# Clear existing demo articles before loading
+python3 manage.py load_geometadata_demo --journal-code=geodemo --clear-existing
+```
+
+**Arguments:**
+
+| Argument | Default | Description |
+|---|---|---|
+| `--journal-code` | `dqj` | Journal short code to load data into |
+| `--create-journal` | off | Create the demo journal from `demo_journal.json` if it doesn't exist |
+| `--owner-email` | `admin@example.com` | Email of user to be set as article owner |
+| `--with-galleys` | off | Attach a placeholder PDF galley to each article |
+| `--clear-existing` | off | Delete existing demo articles before loading (matches by title prefix) |
+
+**What gets created:**
+
+- **Journal** (when using `--create-journal`): "Delta Quadrant Journal" (`dqj`)
+- **2 issues**: Vol. 1 No. 1 (12 articles) and Vol. 1 No. 2 (6 articles)
+- **18 articles** with titles, abstracts, authors, and keywords
+- **Geographic metadata**: WKT geometries (points, polygons, multipoints) and place names
+- **Temporal metadata**: Various historical and modern time periods
+
+**Demo data files:**
+
+| File | Description |
+|---|---|
+| `test/data/demo_journal.json` | Journal metadata (name, code, settings) |
+| `test/data/demo_issues.json` | Issue metadata (volume, number, title, description) |
+| `test/data/demo_articles.json` | Article data with authors, keywords, and geometadata |
+| `test/data/placeholder.pdf` | Placeholder PDF for galleys |
+
+These JSON files can be customized or extended with additional test data.
+The default demo journal "Delta Quadrant Journal" (code: `dqj`) is configured
+with sensible defaults for testing the geometadata plugin.
 
 ### Testing
 

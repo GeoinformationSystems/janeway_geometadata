@@ -1,0 +1,72 @@
+{% load i18n %}
+{# Geospatial and temporal metadata as HTML meta tags for harvesting #}
+{# Formats follow the OJS geoMetadata plugin for interoperability #}
+{# Each format is controlled by embed_* settings #}
+
+{% if geometadata %}
+
+{% if embed_dc %}
+{# Dublin Core schema link #}
+<link rel="schema.DC" href="http://purl.org/dc/elements/1.1/" />
+
+{% if geojson_str and spatial_enabled %}
+{# DC.SpatialCoverage: full GeoJSON geometry #}
+<meta name="DC.SpatialCoverage" scheme="GeoJSON" content="{{ geojson_str }}" />
+{% endif %}
+
+{% if geometadata.bbox_north != None and spatial_enabled %}
+{# DC.box: DCMI Box encoding with bounding box #}
+<meta name="DC.box" content="name={{ geometadata.place_name|default:"" }}; northlimit={{ geometadata.bbox_north }}; southlimit={{ geometadata.bbox_south }}; westlimit={{ geometadata.bbox_west }}; eastlimit={{ geometadata.bbox_east }}; projection=EPSG4326" />
+
+{# ISO 19139: Geographic Bounding Box #}
+<meta name="ISO 19139" content="&lt;gmd:EX_GeographicBoundingBox&gt;&lt;gmd:westBoundLongitude&gt;&lt;gco:Decimal&gt;{{ geometadata.bbox_west }}&lt;/gco:Decimal&gt;&lt;/gmd:westBoundLongitude&gt;&lt;gmd:eastBoundLongitude&gt;&lt;gco:Decimal&gt;{{ geometadata.bbox_east }}&lt;/gco:Decimal&gt;&lt;/gmd:eastBoundLongitude&gt;&lt;gmd:southBoundLatitude&gt;&lt;gco:Decimal&gt;{{ geometadata.bbox_south }}&lt;/gco:Decimal&gt;&lt;/gmd:southBoundLatitude&gt;&lt;gmd:northBoundLatitude&gt;&lt;gco:Decimal&gt;{{ geometadata.bbox_north }}&lt;/gco:Decimal&gt;&lt;/gmd:northBoundLatitude&gt;&lt;/gmd:EX_GeographicBoundingBox&gt;" />
+{% endif %}
+
+{% if temporal_intervals and temporal_enabled %}
+{# DC.temporal and DC.PeriodOfTime: one meta tag per period #}
+{% for interval in temporal_intervals %}
+<meta name="DC.temporal" scheme="ISO8601" content="{{ interval }}" />
+<meta name="DC.PeriodOfTime" scheme="ISO8601" content="{{ interval }}" />
+{% endfor %}
+{% endif %}
+{% endif %}
+
+{% if embed_geo %}
+{% if geometadata.place_name and spatial_enabled %}
+{# geo.placename: human-readable location name #}
+<meta name="geo.placename" content="{{ geometadata.place_name }}" />
+{% endif %}
+{% endif %}
+
+{% if embed_schema %}
+{# Schema.org spatialCoverage and/or temporalCoverage as JSON-LD #}
+{% if spatial_enabled and geometadata.has_spatial_data or temporal_enabled and temporal_interval %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "ScholarlyArticle"{% if spatial_enabled and geojson_geometry_str %},
+  "spatialCoverage": {
+    "@type": "Place",
+    {% if geometadata.place_name %}"name": "{{ geometadata.place_name }}",{% endif %}
+    "geo": {{ geojson_geometry_str|safe }}
+  }{% elif spatial_enabled and geometadata.bbox_north != None %},
+  "spatialCoverage": {
+    "@type": "Place",
+    {% if geometadata.place_name %}"name": "{{ geometadata.place_name }}",{% endif %}
+    "geo": {
+      "@type": "GeoShape",
+      "box": "{{ geometadata.bbox_south }},{{ geometadata.bbox_west }} {{ geometadata.bbox_north }},{{ geometadata.bbox_east }}"
+    }
+  }{% endif %}{% if temporal_enabled and temporal_interval %},
+  "temporalCoverage": "{{ temporal_interval }}"{% endif %}
+}
+</script>
+{% endif %}
+{% endif %}
+
+{% if embed_geojson and geojson_download_url %}
+{# Link to GeoJSON download endpoint #}
+<link rel="alternate" type="application/geo+json" href="{{ geojson_download_url }}" />
+{% endif %}
+
+{% endif %}

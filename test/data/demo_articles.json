@@ -1,0 +1,340 @@
+{
+  "source": "OJS Geometadata Demo Journal (https://service.tib.eu/komet/ojs330/index.php/gmdj)",
+  "issues": [
+    {
+      "volume": 1,
+      "number": 1,
+      "year": 2024,
+      "title": "Geometadata Demo Issue Edition 1",
+      "date_published": "2024-09-19",
+      "articles": [
+        {
+          "title": "A quantitative spatial methodology for delimiting historical centers - an application in Guarda, Portugal",
+          "abstract": "This study employs a morphological approach examining building age data across eight periods spanning 1919-2011. Researchers conducted statistical analysis using threshold values and five novel building indexes, combined with GIS spatial analysis. The work identifies that the historical center of Guarda was consolidated in the 1960s and, since then, has been relatively unchanged. Results demonstrate suitable spatial alignment with consolidated urban areas and official Urban Rehabilitation Area boundaries.",
+          "authors": [
+            {"first_name": "Maria Elisabete", "last_name": "Soares", "affiliation": "Polytechnic of Guarda"},
+            {"first_name": "Fernando", "last_name": "Fonseca", "affiliation": "University of Minho"},
+            {"first_name": "Rui", "last_name": "Ramos", "affiliation": "University of Minho"}
+          ],
+          "keywords": ["historical centers", "urban morphology", "GIS", "spatial analysis", "Portugal"],
+          "geometadata": {
+            "place_name": "Guarda, Portugal",
+            "admin_units": "Guarda District, Centro Region, Portugal",
+            "geometry_wkt": "POINT(-7.2671 40.5372)",
+            "temporal_start": "1919-01-01",
+            "temporal_end": "2011-12-31"
+          }
+        },
+        {
+          "title": "An Etrusco-Italic Antefix of Potnia Theron from Ardea",
+          "abstract": "The article examines an unpublished terracotta architectural ornament featuring a female deity figure. The object originates from Ardea in Latium and dates to the 3rd century B.C. The iconography represents a strong nature goddess laden with symbolic apotropaic powers appearing in religious and public contexts throughout Etruscan and Central Italian regions from the 7th to 1st century B.C.",
+          "authors": [
+            {"first_name": "Hamutal", "last_name": "Suliman-Wolf", "orcid": "0000-0003-0691-4471"}
+          ],
+          "keywords": ["Etruscan", "archaeology", "terracotta", "Ardea", "Potnia Theron"],
+          "geometadata": {
+            "place_name": "Ardea, Latium, Italy",
+            "admin_units": "Lazio, Italy",
+            "geometry_wkt": "POINT(12.5467 41.6092)",
+            "temporal_start": "-0699-01-01",
+            "temporal_end": "-0001-12-31"
+          }
+        },
+        {
+          "title": "Beach-ridge formation as a possible indicator for an open Limfjord - North Sea connection",
+          "abstract": "Research employing optically stimulated luminescence dating of beach ridges at Gjellerodde demonstrates three distinct periods of beach-ridge formation coincide with periods when the Limfjord was open towards the North Sea. The study documents correlations with Late Holocene sea-level fluctuations, estimating approximately 0.2 mm/yr relative sea-level fall during the Late Holocene.",
+          "authors": [
+            {"first_name": "Trine", "last_name": "Freiesleben", "affiliation": "Roskilde University; DTU Risoe Campus"},
+            {"first_name": "Lasse Rokkedahl", "last_name": "Berntsen", "affiliation": "Roskilde University"},
+            {"first_name": "Maria", "last_name": "Blaesbjerg", "affiliation": "Roskilde University"},
+            {"first_name": "Emilia", "last_name": "Hoeffer", "affiliation": "Roskilde University"},
+            {"first_name": "Christian", "last_name": "Rasmussen", "affiliation": "UNESCO Global Geopark; Aarhus University"},
+            {"first_name": "Nicolaj Krog", "last_name": "Larsen", "affiliation": "Globe Institute, University of Copenhagen"}
+          ],
+          "keywords": ["beach ridges", "Limfjord", "North Sea", "OSL dating", "Holocene"],
+          "geometadata": {
+            "place_name": "Gjellerodde, western Limfjord, Denmark",
+            "admin_units": "North Jutland, Denmark",
+            "geometry_wkt": "POLYGON((8.2 56.9, 8.8 56.9, 8.8 56.6, 8.2 56.6, 8.2 56.9))",
+            "temporal_start": "-1300-01-01",
+            "temporal_end": "1900-12-31"
+          }
+        },
+        {
+          "title": "First report of the parasitoid wasp Trissolcus basalis (Wollaston, 1858) in Austria",
+          "abstract": "Discovery of parasitized egg clutches from the southern green stink bug in Viennese private gardens during summer 2021, identified through morphological and molecular analysis as the egg parasitoid Trissolcus basalis. This represents the first documented occurrence of this species parasitizing stink bug eggs in Austria.",
+          "authors": [
+            {"first_name": "Anna", "last_name": "Moyses", "affiliation": "AGES, Sustainable Agriculture Department"},
+            {"first_name": "Sarah", "last_name": "Mottinger", "affiliation": "Insect Laboratories Research GmbH"},
+            {"first_name": "Stephan", "last_name": "Manhalter", "affiliation": "AGES, Sustainable Agriculture Department"},
+            {"first_name": "Richard A.", "last_name": "Gottsberger", "affiliation": "AGES, Molecular Biology Diagnostics Department"}
+          ],
+          "keywords": ["parasitoid wasp", "Trissolcus basalis", "Austria", "first record", "biological control"],
+          "geometadata": {
+            "place_name": "Vienna, Austria",
+            "admin_units": "Vienna, Austria",
+            "geometry_wkt": "POINT(16.3738 48.2082)",
+            "temporal_start": "2021-06-01",
+            "temporal_end": "2021-08-31"
+          }
+        },
+        {
+          "title": "Analysis of the Housing Market Dynamics Using NARX Neural Network",
+          "abstract": "The research applies nonlinear autoregressive neural networks to model the dynamics of the housing construction market in Poland across developer and individual investor segments, analyzing 19 years of construction approval and completion data to reveal distinct market patterns.",
+          "authors": [
+            {"first_name": "Daria", "last_name": "Wotzka", "affiliation": "Faculty of Electrical Engineering, Opole University of Technology"},
+            {"first_name": "Grazyna", "last_name": "Suchacka", "affiliation": "Institute of Informatics, University of Opole"},
+            {"first_name": "Lukasz", "last_name": "Mach", "affiliation": "Faculty of Economics, University of Opole"},
+            {"first_name": "Marzena", "last_name": "Stec", "affiliation": "Narodowy Bank Polski, Regional Branch in Opole"},
+            {"first_name": "Joachim", "last_name": "Foltys", "affiliation": "Humanitas University in Sosnowiec"}
+          ],
+          "keywords": ["housing market", "neural networks", "NARX", "Poland", "market dynamics"],
+          "geometadata": {
+            "place_name": "Poland",
+            "admin_units": "Poland",
+            "geometry_wkt": "POLYGON((14.12 49.0, 24.15 49.0, 24.15 54.83, 14.12 54.83, 14.12 49.0))",
+            "temporal_start": "2000-01-01",
+            "temporal_end": "2019-12-31"
+          }
+        },
+        {
+          "title": "Revisiting Conditional Typology for Bangla",
+          "abstract": "The research examines two conditional formation strategies in Bangla: Correlative and Participial Conditionals, demonstrating functional distinctions supporting semantic theories that equate Hypothetical and Biscuit Conditionals. The analysis extends to the then-word 'tahole' and proposes a pragmatic explanation for the conditional participle '-le', ultimately raising unresolved syntactic classification questions.",
+          "authors": [
+            {"first_name": "Ishani", "last_name": "Guha", "affiliation": "University of Delhi"}
+          ],
+          "keywords": ["Bangla", "conditionals", "linguistics", "typology", "syntax"],
+          "geometadata": {
+            "place_name": "Bangladesh and West Bengal",
+            "admin_units": "Bangladesh; West Bengal, India",
+            "geometry_wkt": "POLYGON((88.0 21.0, 92.7 21.0, 92.7 26.6, 88.0 26.6, 88.0 21.0))",
+            "temporal_start": null,
+            "temporal_end": null
+          }
+        },
+        {
+          "title": "Crowdsourcing air temperature data for the evaluation of the urban microscale model PALM - a case study in central Europe",
+          "abstract": "This study evaluates the PALM microscale urban climate model using crowdsourced temperature data from Netatmo citizen weather stations during a heat event in Bochum, Germany. The research demonstrates strong model performance with R-squared values of 0.86-0.88 and RMSE around 2 K, though nighttime temperatures were underestimated. The authors conclude that crowdsourced air temperature data proved valuable for model evaluation due to the high number of stations within urban areas.",
+          "authors": [
+            {"first_name": "Lara", "last_name": "van der Linden", "affiliation": "Ruhr-Universitat Bochum"},
+            {"first_name": "Patrick", "last_name": "Hogan"},
+            {"first_name": "Bjorn", "last_name": "Maronga", "affiliation": "Leibniz University Hannover"},
+            {"first_name": "Rowell", "last_name": "Hagemann"},
+            {"first_name": "Benjamin", "last_name": "Bechtel"}
+          ],
+          "keywords": ["urban climate", "PALM model", "crowdsourcing", "temperature", "Bochum"],
+          "geometadata": {
+            "place_name": "Bochum, Germany",
+            "admin_units": "North Rhine-Westphalia, Germany",
+            "geometry_wkt": "POINT(7.2162 51.4818)",
+            "temporal_start": "2019-06-25",
+            "temporal_end": "2019-06-26"
+          }
+        },
+        {
+          "title": "Post-Brexit Power of European Union From the World Trade Network Analysis",
+          "abstract": "The research employs Google matrix methodology to examine multiproduct trade networks using UN COMTRADE data. Key findings indicate the EU-27 ranks first in global trade influence ahead of USA and China following Brexit, outperforming traditional import-export analyses.",
+          "authors": [
+            {"first_name": "Justin", "last_name": "Loye", "affiliation": "Toulouse Institute of Computer Science Research"},
+            {"first_name": "Katia", "last_name": "Jaffres-Runser", "affiliation": "Toulouse Institute of Computer Science Research"},
+            {"first_name": "Dima L.", "last_name": "Shepelyansky", "affiliation": "Paul Sabatier University"}
+          ],
+          "keywords": ["Brexit", "trade networks", "European Union", "network analysis", "economics"],
+          "geometadata": {
+            "place_name": "European Union",
+            "admin_units": "European Union",
+            "geometry_wkt": "POLYGON((-10.5 36.0, 34.6 36.0, 34.6 71.2, -10.5 71.2, -10.5 36.0))",
+            "temporal_start": "2016-01-01",
+            "temporal_end": "2020-12-31"
+          }
+        },
+        {
+          "title": "Islam and the Perception of Islam in Contemporary Indonesia",
+          "abstract": "The paper examines post-reformasi Indonesian Islam through scholarly literature, questioning the dominant Islamization framework. It argues that older cultural styles and variations within local Islam have not disappeared and cautions against using single labels to characterize Islamic development in the region.",
+          "authors": [
+            {"first_name": "Vincent", "last_name": "Houben"}
+          ],
+          "keywords": ["Islam", "Indonesia", "religious studies", "post-reformasi", "culture"],
+          "geometadata": {
+            "place_name": "Indonesia",
+            "admin_units": "Indonesia",
+            "geometry_wkt": "POLYGON((95.0 -11.0, 141.0 -11.0, 141.0 6.0, 95.0 6.0, 95.0 -11.0))",
+            "temporal_start": "1998-01-01",
+            "temporal_end": "2024-12-31"
+          }
+        },
+        {
+          "title": "A record of magmatic differentiation in plutonic xenoliths from Santorini (Greece)",
+          "abstract": "The research examines plutonic xenoliths from Santorini volcano, analyzing mineral compositions and melt inclusions to understand magmatic differentiation processes. Findings indicate fractional crystallisation as the dominant differentiation process with no significant role of reactive porous flow.",
+          "authors": [
+            {"first_name": "Sean", "last_name": "Whitley", "affiliation": "Keele University"},
+            {"first_name": "Ralf", "last_name": "Halama", "affiliation": "Martin-Luther-Universitat"},
+            {"first_name": "Ralf", "last_name": "Gertisser", "affiliation": "Keele University"},
+            {"first_name": "Thor H.", "last_name": "Hansteen", "affiliation": "GEOMAR Helmholtz Centre for Ocean Research Kiel"},
+            {"first_name": "Matthias", "last_name": "Frische", "affiliation": "GEOMAR Helmholtz Centre for Ocean Research Kiel"},
+            {"first_name": "Torsten", "last_name": "Vennemann", "affiliation": "Universite de Lausanne"}
+          ],
+          "keywords": ["Santorini", "volcano", "magmatic differentiation", "xenoliths", "Greece"],
+          "geometadata": {
+            "place_name": "Santorini, Greece",
+            "admin_units": "South Aegean, Greece",
+            "geometry_wkt": "POINT(25.4615 36.3932)",
+            "temporal_start": "-360000-01-01",
+            "temporal_end": "2024-12-31"
+          }
+        },
+        {
+          "title": "The Coins from the 2023 Excavation Season of the German-Israeli Tell Iztabba Excavation Project",
+          "abstract": "The report catalogs 44 coins from the 2023 excavation across three areas, spanning Hellenistic, Roman, Byzantine and Islamic periods. The collection includes Seleucid, Hellenistic municipal, Hasmonean, Roman imperial, Late Roman, Byzantine, and Islamic coins, with geographic and temporal context provided for settlement history understanding.",
+          "authors": [
+            {"first_name": "Mati", "last_name": "Johananoff"},
+            {"first_name": "Achim", "last_name": "Lichtenberger", "orcid": "0000-0003-2653-9859"},
+            {"first_name": "Jessica", "last_name": "Schellig"},
+            {"first_name": "Oren", "last_name": "Tal", "orcid": "0000-0002-7339-4851"}
+          ],
+          "keywords": ["numismatics", "archaeology", "Tell Iztabba", "excavation", "coins"],
+          "geometadata": {
+            "place_name": "Tell Iztabba, Israel",
+            "admin_units": "Northern District, Israel",
+            "geometry_wkt": "POINT(35.5033 32.5039)",
+            "temporal_start": "-0332-01-01",
+            "temporal_end": "1099-12-31"
+          }
+        },
+        {
+          "title": "Cooler and drier conditions increase parasitism in subtropical damselfly populations",
+          "abstract": "The study examines how parasitism fluctuates seasonally in damselfly populations within subtropical regions. Researchers found that parasite prevalence and intensity were greater during cooler seasons (autumn and winter) compared to hotter seasons and documented correlations between precipitation levels and infection rates.",
+          "authors": [
+            {"first_name": "Md Kawsar", "last_name": "Khan", "affiliation": "Freie Universitat Berlin"},
+            {"first_name": "Shatabdi", "last_name": "Paul"},
+            {"first_name": "Mostakim", "last_name": "Rayhan"},
+            {"first_name": "Marie E.", "last_name": "Herberstein"}
+          ],
+          "keywords": ["parasitism", "damselflies", "climate", "subtropical", "ecology"],
+          "geometadata": {
+            "place_name": "Bangladesh",
+            "admin_units": "Bangladesh",
+            "geometry_wkt": "POINT(90.3563 23.6850)",
+            "temporal_start": "2021-01-01",
+            "temporal_end": "2023-12-31"
+          }
+        }
+      ]
+    },
+    {
+      "volume": 1,
+      "number": 2,
+      "year": 2025,
+      "title": "Geometadata Demo Issue Edition 2",
+      "date_published": "2025-07-14",
+      "articles": [
+        {
+          "title": "Goods and Ethnicity: Trade and Bazaars in Laos from a Gift Perspective - A Discussion",
+          "abstract": "The article examines trade and bazaar practices in Laos through the lens of gift exchange theory, analyzing how goods circulation relates to ethnic identity and social relationships in the Laotian context.",
+          "authors": [
+            {"first_name": "Guido", "last_name": "Sprenger"},
+            {"first_name": "Chris", "last_name": "Gregory"},
+            {"first_name": "Kostas", "last_name": "Retsikas"},
+            {"first_name": "Hans Peter", "last_name": "Hahn"}
+          ],
+          "keywords": ["Laos", "trade", "ethnicity", "gift exchange", "bazaars"],
+          "geometadata": {
+            "place_name": "Laos",
+            "admin_units": "Laos",
+            "geometry_wkt": "POLYGON((100.1 13.9, 107.7 13.9, 107.7 22.5, 100.1 22.5, 100.1 13.9))",
+            "temporal_start": null,
+            "temporal_end": null
+          }
+        },
+        {
+          "title": "Survival of the brightest: pIRIR dating of volcanic sediments in Sulawesi, Indonesia, using micro-aliquots of K-rich feldspar",
+          "abstract": "The study applies post-infrared infrared stimulated luminescence dating techniques to volcanic sediments from Sulawesi, Indonesia, using micro-aliquots of potassium-rich feldspar to establish chronologies for archaeological and geological contexts.",
+          "authors": [
+            {"first_name": "Mariana", "last_name": "Sontag-Gonzalez"},
+            {"first_name": "Bo", "last_name": "Li"},
+            {"first_name": "Kieran", "last_name": "O'Gorman"},
+            {"first_name": "Basran", "last_name": "Burhan"},
+            {"first_name": "Budianto", "last_name": "Hakim"},
+            {"first_name": "Adam", "last_name": "Brumm"},
+            {"first_name": "Richard G.", "last_name": "Roberts"}
+          ],
+          "keywords": ["luminescence dating", "pIRIR", "Sulawesi", "volcanic sediments", "geochronology"],
+          "geometadata": {
+            "place_name": "Sulawesi, Indonesia",
+            "admin_units": "Sulawesi, Indonesia",
+            "geometry_wkt": "POLYGON((119.0 -5.7, 125.0 -5.7, 125.0 1.7, 119.0 1.7, 119.0 -5.7))",
+            "temporal_start": "-50000-01-01",
+            "temporal_end": "2024-12-31"
+          }
+        },
+        {
+          "title": "The Digitalization of Local Owner-Operated Retail Outlets: How environmental and organizational factors drive the use of digital tools and applications",
+          "abstract": "The research investigates how local owner-operated retail businesses adopt and utilize digital tools and applications, examining the environmental and organizational factors that influence digitalization processes in small-scale retail operations.",
+          "authors": [
+            {"first_name": "Lars", "last_name": "Bollweg"},
+            {"first_name": "Soeren", "last_name": "Baersch"},
+            {"first_name": "Richard", "last_name": "Lackes"},
+            {"first_name": "Markus", "last_name": "Siepermann"},
+            {"first_name": "Peter", "last_name": "Weber"}
+          ],
+          "keywords": ["digitalization", "retail", "small business", "digital tools", "organizational factors"],
+          "geometadata": {
+            "place_name": "Germany",
+            "admin_units": "Germany",
+            "geometry_wkt": "POLYGON((5.87 47.27, 15.04 47.27, 15.04 55.06, 5.87 55.06, 5.87 47.27))",
+            "temporal_start": "2018-01-01",
+            "temporal_end": "2022-12-31"
+          }
+        },
+        {
+          "title": "A shape-based heuristic for the detection of urban block artifacts in street networks",
+          "abstract": "The study presents a computational heuristic approach for detecting urban block artifacts within street network datasets, using shape-based analysis to identify anomalies and data quality issues in urban morphological studies.",
+          "authors": [
+            {"first_name": "Martin", "last_name": "Fleischmann"},
+            {"first_name": "Anastassia", "last_name": "Vybornova"}
+          ],
+          "keywords": ["urban morphology", "street networks", "GIS", "heuristics", "data quality"],
+          "geometadata": {
+            "place_name": "Multiple European cities",
+            "admin_units": "Europe",
+            "geometry_wkt": "MULTIPOINT((2.3522 48.8566), (13.4050 52.5200), (-0.1276 51.5074), (4.9041 52.3676))",
+            "temporal_start": null,
+            "temporal_end": null
+          }
+        },
+        {
+          "title": "Herrschaft vom Pferderuecken - Reisekoenigtum zur Zeit Heinrichs IV.",
+          "abstract": "The article examines the practice of itinerant kingship during the reign of Henry IV, analyzing how medieval rulers exercised authority through continuous travel across their domains, governing from horseback.",
+          "authors": [
+            {"first_name": "Torben", "last_name": "Tschiedel"}
+          ],
+          "keywords": ["medieval history", "Henry IV", "itinerant kingship", "Holy Roman Empire", "governance"],
+          "geometadata": {
+            "place_name": "Holy Roman Empire",
+            "admin_units": "Central Europe",
+            "geometry_wkt": "POLYGON((5.0 46.0, 17.0 46.0, 17.0 55.0, 5.0 55.0, 5.0 46.0))",
+            "temporal_start": "1056-01-01",
+            "temporal_end": "1106-12-31"
+          }
+        },
+        {
+          "title": "German Renewable Energy Policies and Their Implications for Local Land Use - Maize for Biogas From 2008 - 2018 in Brandenburg",
+          "abstract": "The study analyzes the impact of German renewable energy policies on agricultural land use in Brandenburg, focusing on maize cultivation for biogas production between 2008 and 2018, examining the spatial and environmental implications of energy transition policies.",
+          "authors": [
+            {"first_name": "Tobia", "last_name": "Lakes"},
+            {"first_name": "Franziska", "last_name": "Appel"},
+            {"first_name": "Felipe", "last_name": "Vergara"}
+          ],
+          "keywords": ["renewable energy", "biogas", "land use", "Brandenburg", "agricultural policy"],
+          "geometadata": {
+            "place_name": "Brandenburg, Germany",
+            "admin_units": "Brandenburg, Germany",
+            "geometry_wkt": "POLYGON((11.27 51.36, 14.77 51.36, 14.77 53.56, 11.27 53.56, 11.27 51.36))",
+            "temporal_start": "2008-01-01",
+            "temporal_end": "2018-12-31"
+          }
+        }
+      ]
+    }
+  ]
+}

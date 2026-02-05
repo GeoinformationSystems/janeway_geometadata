@@ -1,0 +1,250 @@
+{% extends "core/base.html" %}
+{% load static i18n %}
+
+{% block title %}{% trans "Map" %}{% if site_name %} | {{ site_name }}{% endif %}{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'geometadata/css/leaflet.css' %}" />
+<link rel="stylesheet" href="{% static 'geometadata/css/leaflet.fullscreen.css' %}" />
+<link rel="stylesheet" href="{% static 'geometadata/css/geometadata.css' %}" />
+<style>
+    #geometadata-fullmap {
+        height: calc(100vh - 200px);
+        min-height: 500px;
+        width: 100%;
+    }
+    .geometadata-fullpage-container {
+        padding: 20px;
+    }
+    .geometadata-loading {
+        text-align: center;
+        padding: 50px;
+    }
+    /* Zoom to all features button - globe/world icon */
+    .leaflet-control-zoomall a {
+        background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23333"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>');
+        background-size: 18px 18px;
+        background-position: center;
+        background-repeat: no-repeat;
+    }
+    /* Remove focus outline on map container */
+    #geometadata-fullmap:focus {
+        outline: none;
+    }
+    .leaflet-container:focus {
+        outline: none;
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="geometadata-fullpage-container">
+    <h1>{% trans "Geographic Coverage Map" %}</h1>
+    {% if scope == "press" %}
+    <p>{% trans "This map shows the geographic coverage of all articles and preprints across all journals and repositories." %}</p>
+    {% else %}
+    <p>{% trans "This map shows the geographic coverage of all articles/preprints with location metadata." %}</p>
+    {% endif %}
+
+    <div id="geometadata-fullmap-container">
+        <div id="geometadata-loading" class="geometadata-loading">
+            <i class="fa fa-spinner fa-spin fa-2x"></i>
+            <p>{% trans "Loading map data..." %}</p>
+        </div>
+        <div id="geometadata-fullmap" style="display: none;"></div>
+    </div>
+</div>
+
+<script src="{% static 'geometadata/js/leaflet.js' %}"></script>
+<script src="{% static 'geometadata/js/leaflet-providers.js' %}"></script>
+<script src="{% static 'geometadata/js/leaflet.fullscreen.js' %}"></script>
+<script src="{% static 'geometadata/js/geometadata-display.js' %}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var mapContainer = document.getElementById('geometadata-fullmap');
+        var loadingDiv = document.getElementById('geometadata-loading');
+
+        var enableColours = {{ enable_map_colours|yesno:"true,false" }};
+        var colourGroupProp = '{{ colour_group_prop|default:"" }}';
+        var paletteUrl = '{% url "geometadata_colour_palette_api" %}';
+        var featureOpacity = {{ feature_opacity|default:"0.7" }};
+
+        // i18n strings
+        var i18nUntitled = '{% trans "Untitled" %}';
+        var i18nView = '{% trans "View" %}';
+
+        // Initialize map
+        var map = L.map('geometadata-fullmap', {
+            zoomControl: false
+        }).setView(
+            [{{ default_lat }}, {{ default_lng }}],
+            {{ default_zoom }}
+        );
+
+        // Add zoom control
+        L.control.zoom({
+            zoomInTitle: '{% trans "Zoom in" %}',
+            zoomOutTitle: '{% trans "Zoom out" %}'
+        }).addTo(map);
+
+        // Add fullscreen control explicitly (more reliable than map option)
+        if (L.Control.FullScreen) {
+            new L.Control.FullScreen({
+                position: 'topleft',
+                title: '{% trans "Full Screen" %}',
+                titleCancel: '{% trans "Exit Full Screen" %}'
+            }).addTo(map);
+        }
+
+        // Create zoom-to-all control (will be enabled after data loads)
+        var ZoomAllControl = L.Control.extend({
+            options: { position: 'topleft' },
+            onAdd: function(map) {
+                var container = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-zoomall');
+                var link = L.DomUtil.create('a', '', container);
+                link.href = '#';
+                link.title = '{% trans "Zoom to all features" %}';
+                link.setAttribute('role', 'button');
+                link.setAttribute('aria-label', '{% trans "Zoom to all features" %}');
+                L.DomEvent.disableClickPropagation(container);
+                L.DomEvent.on(link, 'click', L.DomEvent.stop);
+                L.DomEvent.on(link, 'click', function() {
+                    if (this._geojsonLayer) {
+                        var bounds = this._geojsonLayer.getBounds();
+                        if (bounds.isValid()) {
+                            map.fitBounds(bounds, { padding: [20, 20] });
+                        }
+                    }
+                }, this);
+                this._link = link;
+                return container;
+            },
+            setGeoJSONLayer: function(layer) {
+                this._geojsonLayer = layer;
+            }
+        });
+        var zoomAllControl = new ZoomAllControl();
+        zoomAllControl.addTo(map);
+
+        // Add tile layer via leaflet-providers
+        L.tileLayer.provider('{{ basemap_provider|default:"OpenStreetMap.Mapnik" }}').addTo(map);
+
+        // Helper: build colour map from palette + features
+        function buildColourMap(palette, features, groupProp) {
+            if (!palette || !palette.length || !groupProp) return {};
+            var seen = {}, keys = [];
+            for (var i = 0; i < features.length; i++) {
+                var k = features[i].properties && features[i].properties[groupProp];
+                if (k != null) k = String(k);
+                if (k && !seen[k]) { seen[k] = true; keys.push(k); }
+            }
+            keys.sort();
+            var colourMapping = {};
+            for (var j = 0; j < keys.length; j++) {
+                colourMapping[keys[j]] = palette[j % palette.length];
+            }
+            return colourMapping;
+        }
+
+        function getColour(feature, colourMap) {
+            if (colourGroupProp && feature.properties) {
+                var key = String(feature.properties[colourGroupProp] || '');
+                if (colourMap[key]) return colourMap[key];
+            }
+            return '#3388ff';
+        }
+
+        function renderMap(data, palette) {
+            loadingDiv.style.display = 'none';
+            mapContainer.style.display = 'block';
+
+            if (!data.features || data.features.length === 0) {
+                mapContainer.innerHTML = '<p class="text-center">{% trans "No articles with geographic metadata found." %}</p>';
+                return;
+            }
+
+            var colourMap = buildColourMap(palette, data.features, colourGroupProp);
+
+            var geojsonLayer = L.geoJSON(data, {
+                style: function(feature) {
+                    var c = getColour(feature, colourMap);
+                    return { color: c, weight: 2, opacity: Math.min(featureOpacity + 0.2, 1.0), fillColor: c, fillOpacity: featureOpacity * 0.5 };
+                },
+                pointToLayer: function(feature, latlng) {
+                    var c = getColour(feature, colourMap);
+                    return L.circleMarker(latlng, {
+                        radius: 8, fillColor: c, color: '#fff',
+                        weight: 2, opacity: 1, fillOpacity: featureOpacity
+                    });
+                },
+                onEachFeature: function(feature, layer) {
+                    if (feature.properties) {
+                        var popupContent = '<strong>' + (feature.properties.title || i18nUntitled) + '</strong>';
+                        if (feature.properties.journal) {
+                            popupContent += '<br><em>' + feature.properties.journal + '</em>';
+                        } else if (feature.properties.repository) {
+                            popupContent += '<br><em>' + feature.properties.repository + '</em>';
+                        }
+                        if (feature.properties.issue) {
+                            popupContent += '<br>' + feature.properties.issue;
+                        }
+                        if (feature.properties.place_name) {
+                            popupContent += '<br>' + feature.properties.place_name;
+                        }
+                        if (feature.properties.url) {
+                            popupContent += '<br><a href="' + feature.properties.url + '">{% trans "View" %}</a>';
+                        }
+                        layer.bindPopup(popupContent);
+                    }
+                }
+            }).addTo(map);
+
+            // Set the layer on the zoom-all control
+            zoomAllControl.setGeoJSONLayer(geojsonLayer);
+
+            // Invalidate size first (container was hidden), then fit bounds
+            map.invalidateSize();
+            if (geojsonLayer.getBounds().isValid()) {
+                map.fitBounds(geojsonLayer.getBounds(), {padding: [20, 20]});
+            }
+
+            // Add legend if colour coding is active
+            if (Object.keys(colourMap).length > 0) {
+                var legend = L.control({ position: 'bottomright' });
+                legend.onAdd = function() {
+                    var div = L.DomUtil.create('div', 'geometadata-legend');
+                    div.style.cssText = 'background:white;padding:8px 12px;border-radius:4px;box-shadow:0 1px 4px rgba(0,0,0,0.3);max-height:200px;overflow-y:auto;font-size:12px;line-height:1.6';
+                    var sortedKeys = Object.keys(colourMap).sort();
+                    // Determine prefix based on grouping property
+                    var labelPrefix = '';
+                    if (colourGroupProp === 'issue') {
+                        labelPrefix = '{% trans "Issue" %}: ';
+                    } else if (colourGroupProp === 'journal') {
+                        labelPrefix = '{% trans "Journal" %}: ';
+                    } else if (colourGroupProp === 'repository') {
+                        labelPrefix = '{% trans "Repository" %}: ';
+                    }
+                    for (var m = 0; m < sortedKeys.length; m++) {
+                        div.innerHTML += '<span style="display:inline-block;width:12px;height:12px;border-radius:2px;margin-right:6px;vertical-align:middle;background:' + colourMap[sortedKeys[m]] + '"></span>' + labelPrefix + sortedKeys[m] + '<br>';
+                    }
+                    return div;
+                };
+                legend.addTo(map);
+            }
+        }
+
+        // Fetch geometadata; optionally also fetch colour palette
+        var dataPromise = fetch('{{ api_url }}').then(function(r) { return r.json(); });
+        var palettePromise = (enableColours && colourGroupProp)
+            ? fetch(paletteUrl).then(function(r) { return r.json(); }).then(function(d) { return d.palette || []; })
+            : Promise.resolve([]);
+
+        Promise.all([dataPromise, palettePromise])
+            .then(function(results) { renderMap(results[0], results[1]); })
+            .catch(function(error) {
+                console.error('Error loading geometadata:', error);
+                loadingDiv.innerHTML = '<p class="text-danger">{% trans "Error loading map data." %}</p>';
+            });
+    });
+</script>
+{% endblock %}

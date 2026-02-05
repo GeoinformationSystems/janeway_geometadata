@@ -1,0 +1,38 @@
+{% load i18n %}
+{# Link to geometadata editing shown on article admin page #}
+{% if show_link %}
+<div class="row expanded">
+    <div class="large-12 columns">
+        <div class="title-area">
+            <h2>{% trans "Geospatial Metadata" %}</h2>
+        </div>
+        <div class="content">
+            {% if has_geometadata %}
+            <p>
+                {% if geometadata.place_name %}
+                    <strong>{% trans "Place" %}:</strong> {{ geometadata.place_name }}
+                    {% if geometadata.admin_units %}({{ geometadata.admin_units }}){% endif %}
+                    <br>
+                {% endif %}
+                {% if temporal_display %}
+                    <strong>{% trans "Time" %}:</strong>
+                    {% for display in temporal_display %}
+                        {{ display }}{% if not forloop.last %}, {% endif %}
+                    {% endfor %}
+                {% endif %}
+            </p>
+            {% else %}
+            <p>{% trans "No geospatial metadata has been added to this article yet." %}</p>
+            {% endif %}
+            <a class="button small" href="{{ edit_url }}">
+                <i class="fa fa-globe"></i>
+                {% if has_geometadata %}
+                    {% trans "Edit Geometadata" %}
+                {% else %}
+                    {% trans "Add Geometadata" %}
+                {% endif %}
+            </a>
+        </div>
+    </div>
+</div>
+{% endif %}
