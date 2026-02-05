@@ -1,5 +1,11 @@
 # Geometadata Plugin for Janeway
 
+<div>
+<a href="https://projects.tib.eu/komet/en/">
+<img src="https://projects.tib.eu/fileadmin/data/komet/img/Logo_Komet_RZ.png" alt="KOMET Logo" title="KOMET Project" width="20%">
+</a>
+</div>
+
 This plugin adds geospatial and temporal metadata support for articles (journals) and preprints (repositories) in [Janeway](https://github.com/openlibhums/janeway).
 
 ## Background
