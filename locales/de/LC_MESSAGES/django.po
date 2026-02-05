@@ -363,8 +363,8 @@ msgid "Enable Map Page"
 msgstr "Kartenseite aktivieren"
 
 #: templates/geometadata/manager.html
-msgid "Enable the aggregated map page for this journal/repository."
-msgstr "Aggregierte Kartenseite für diese Zeitschrift/dieses Repositorium aktivieren."
+msgid "Enable the aggregated map page. At press level, this enables the press-wide map at /plugins/geometadata/press-map/; at journal level, the journal map at /plugins/geometadata/map/."
+msgstr "Aggregierte Kartenseite aktivieren. Auf Press-Ebene wird die Press-weite Karte unter /plugins/geometadata/press-map/ aktiviert; auf Zeitschriften-Ebene die Zeitschriften-Karte unter /plugins/geometadata/map/."
 
 #: templates/geometadata/manager.html
 msgid "Require Geometadata on Submission"

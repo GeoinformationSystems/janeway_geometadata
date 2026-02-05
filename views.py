@@ -124,20 +124,23 @@ def get_unavailable_settings(hook_availability):
 
 
 def _get_plugin_setting(setting_name, journal=None, repository=None):
-    """Helper to get plugin settings."""
+    """Helper to get plugin settings.
+
+    When both journal and repository are None, returns press-level (default)
+    settings.
+    """
     plugin = plugin_settings.get_self()
     if not plugin:
         return None
 
+    # Determine context: journal, repository's press, or None (press-level)
     context = journal or (repository.press if repository else None)
-    if context:
-        return setting_handler.get_plugin_setting(
-            plugin,
-            setting_name,
-            context,
-            create=False,
-        )
-    return None
+    return setting_handler.get_plugin_setting(
+        plugin,
+        setting_name,
+        context,
+        create=False,
+    )
 
 
 def _save_plugin_setting(setting_name, value, journal=None, repository=None):
@@ -147,6 +150,9 @@ def _save_plugin_setting(setting_name, value, journal=None, repository=None):
     This is more robust than calling setting_handler.save_plugin_setting
     directly, as it handles the case where the setting hasn't been created
     yet (e.g., plugin updated but install_plugins not re-run).
+
+    When both journal and repository are None, saves press-level (default)
+    settings.
     """
     import core.models as core_models
 
@@ -154,9 +160,8 @@ def _save_plugin_setting(setting_name, value, journal=None, repository=None):
     if not plugin:
         return None
 
+    # Determine context: journal, repository's press, or None (press-level)
     context = journal or (repository.press if repository else None)
-    if not context:
-        return None
 
     plugin_group_name = f"plugin:{plugin.name}"
 
@@ -439,9 +444,8 @@ def manager(request):
         # Handle settings update
         journal = getattr(request, "journal", None)
         repository = getattr(request, "repository", None)
-        context = journal or (repository.press if repository else None)
 
-        if context and plugin:
+        if plugin:
             boolean_settings = [
                 "enable_geometadata",
                 "enable_spatial",
@@ -792,7 +796,7 @@ def press_map_page(request):
     press = getattr(request, "press", None)
     site_name = press.name if press else ""
 
-    # Get feature opacity setting (press-level)
+    # Get press-level settings for map defaults
     opacity_setting = _get_plugin_setting("map_feature_opacity")
     feature_opacity = 0.7
     if opacity_setting and opacity_setting.value:
@@ -801,10 +805,33 @@ def press_map_page(request):
         except (ValueError, TypeError):
             pass
 
+    lat_setting = _get_plugin_setting("default_map_lat")
+    lng_setting = _get_plugin_setting("default_map_lng")
+    zoom_setting = _get_plugin_setting("default_map_zoom")
+
+    default_lat = 0
+    default_lng = 0
+    default_zoom = 2
+    if lat_setting and lat_setting.value:
+        try:
+            default_lat = float(lat_setting.value)
+        except (ValueError, TypeError):
+            pass
+    if lng_setting and lng_setting.value:
+        try:
+            default_lng = float(lng_setting.value)
+        except (ValueError, TypeError):
+            pass
+    if zoom_setting and zoom_setting.value:
+        try:
+            default_zoom = int(zoom_setting.value)
+        except (ValueError, TypeError):
+            pass
+
     template_context = {
-        "default_lat": 0,
-        "default_lng": 0,
-        "default_zoom": 2,
+        "default_lat": default_lat,
+        "default_lng": default_lng,
+        "default_zoom": default_zoom,
         "api_url": reverse("geometadata_press_api"),
         "scope": "press",
         "site_name": site_name,
@@ -918,12 +945,12 @@ def all_geometadata_api(request):
                 geojson["properties"]["url"] = gm.article.local_url
                 geojson["properties"]["id"] = gm.article.pk
                 geojson["properties"]["type"] = "article"
-                # Group key for colouring: primary issue title
-                primary_issue = gm.article.primary_issue
-                if primary_issue:
+                # Group key for colouring: primary issue or first issue
+                issue = gm.article.primary_issue or gm.article.issues.first()
+                if issue:
                     geojson["properties"]["issue"] = (
-                        primary_issue.issue_title
-                        or f"Vol. {primary_issue.volume} No. {primary_issue.issue}"
+                        issue.issue_title
+                        or f"Vol. {issue.volume} No. {issue.issue}"
                     )
                 features.append(geojson)
 

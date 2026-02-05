@@ -31,21 +31,22 @@ def get_plugin_setting(setting_name, journal=None, repository=None):
     :param journal: Journal context (optional)
     :param repository: Repository context (optional)
     :return: SettingValue object or None
+
+    When both journal and repository are None, returns press-level (default)
+    settings.
     """
     plugin = plugin_settings.get_self()
     if not plugin:
         return None
 
-    # Try journal first, then repository's press
+    # Determine context: journal, repository's press, or None (press-level)
     context = journal or (repository.press if repository else None)
-    if context:
-        return setting_handler.get_plugin_setting(
-            plugin,
-            setting_name,
-            context,
-            create=False,
-        )
-    return None
+    return setting_handler.get_plugin_setting(
+        plugin,
+        setting_name,
+        context,
+        create=False,
+    )
 
 
 def save_plugin_setting(setting_name, value, journal=None, repository=None):
@@ -61,14 +62,16 @@ def save_plugin_setting(setting_name, value, journal=None, repository=None):
     :param journal: Journal context (optional)
     :param repository: Repository context (optional)
     :return: SettingValue object or None
+
+    When both journal and repository are None, saves press-level (default)
+    settings.
     """
     plugin = plugin_settings.get_self()
     if not plugin:
         return None
 
+    # Determine context: journal, repository's press, or None (press-level)
     context = journal or (repository.press if repository else None)
-    if not context:
-        return None
 
     plugin_group_name = f"plugin:{plugin.name}"
 
