@@ -246,7 +246,7 @@ def install():
             "types": "boolean",
             "description": (
                 "Show download links for geometadata in GeoJSON format "
-                "on article and issue pages."
+                "on article pages, issue pages, and the journal-wide map page."
             ),
             "is_translatable": False,
         },

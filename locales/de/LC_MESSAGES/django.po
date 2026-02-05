@@ -463,13 +463,17 @@ msgid "Show GeoJSON Download Links"
 msgstr "GeoJSON-Download-Links anzeigen"
 
 #: templates/geometadata/manager.html
-msgid "Show download links for geometadata in GeoJSON format on article and issue pages."
-msgstr "Download-Links für Geometadaten im GeoJSON-Format auf Artikel- und Ausgabenseiten anzeigen."
+msgid "Show download links for geometadata in GeoJSON format on article pages, issue pages, and the journal-wide map page."
+msgstr "Download-Links für Geometadaten im GeoJSON-Format auf Artikelseiten, Ausgabenseiten und der Zeitschriften-Kartenseite anzeigen."
 
 #: templates/geometadata/article_map.html
 #: templates/geometadata/issue_map.html
 msgid "Download Geometadata (GeoJSON)"
 msgstr "Geometadaten herunterladen (GeoJSON)"
+
+#: templates/geometadata/map_page.html
+msgid "Download all Geometadata (GeoJSON)"
+msgstr "Alle Geometadaten herunterladen (GeoJSON)"
 
 #: templates/geometadata/manager.html
 msgid "HTML Metadata Embedding"

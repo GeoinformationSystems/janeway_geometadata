@@ -49,6 +49,7 @@ Geospatial metadata collected by this plugin and its OJS counterparts can be agg
 
 - **Janeway** 1.7+ (tested with current main branch)
 - **geopy** ~2.4 (pip, MIT) - reverse geocoding
+- **geomet** ~1.1 (pip, Apache-2.0) - WKT/GeoJSON conversion
 - **Leaflet.js** 1.9.4 (bundled, BSD-2-Clause) - interactive maps
 - **Leaflet.draw** 1.0.4 (bundled, MIT) - drawing tools for geometry editing
 - **leaflet-providers** (bundled, BSD-2-Clause) - basemap provider definitions
@@ -92,7 +93,7 @@ journals/repositories and can be overridden per journal.
 
 | Setting | Default | Description |
 |---|---|---|
-| Show GeoJSON Download Links | on | Show download links for geometadata in GeoJSON format on article and issue pages |
+| Show GeoJSON Download Links | on | Show download links for geometadata in GeoJSON format on article pages, issue pages, and the journal-wide map page |
 
 ### HTML Metadata Embedding
 
@@ -319,7 +320,25 @@ Example: `/plugins/geometadata/api/all.json?south=40&north=60&west=-10&east=30`
 
 A public map page showing all articles/preprints with geographic metadata is
 available at `/plugins/geometadata/map/`. A navigation link is automatically
-added via the `nav_block` hook.
+added via the `nav_block` hook when viewing journal or repository pages.
+
+#### Press-Wide Map
+
+A press-wide map showing articles from all journals and repositories is
+available at `/plugins/geometadata/press-map/`. This requires the "Enable Map
+Page" setting to be turned on at the press level (via
+`/plugins/geometadata/manager/` when accessed outside a journal context).
+
+**Note:** The `nav_block` hook only adds navigation links within journal or
+repository contexts. To add a map link to your press landing page, manually
+add a link to your press theme template:
+
+```django
+<a href="{% url 'geometadata_press_map_page' %}">Map</a>
+```
+
+Or add it to your press navigation in `themes/<your-theme>/templates/press/nav.html`
+or equivalent.
 
 ## Data Model
 

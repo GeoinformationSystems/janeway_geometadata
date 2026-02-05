@@ -83,6 +83,11 @@ urlpatterns = [
         views.download_issue_geojson,
         name="geometadata_download_issue",
     ),
+    path(
+        "download/journal/geojson/",
+        views.download_journal_geojson,
+        name="geometadata_download_journal",
+    ),
     # Reverse geocoding API
     path(
         "api/reverse-geocode/",

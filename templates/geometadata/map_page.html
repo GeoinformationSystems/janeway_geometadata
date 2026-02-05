@@ -53,6 +53,14 @@
         </div>
         <div id="geometadata-fullmap" style="display: none;"></div>
     </div>
+
+    {% if show_download_geojson and journal %}
+    <p class="geometadata-download" style="margin-top: 1em;">
+        <a href="{% url 'geometadata_download_journal' %}" class="geometadata-download-link">
+            <i class="fa fa-download"></i> {% trans "Download all Geometadata (GeoJSON)" %}
+        </a>
+    </p>
+    {% endif %}
 </div>
 
 <script src="{% static 'geometadata/js/leaflet.js' %}"></script>

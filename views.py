@@ -758,6 +758,12 @@ def map_page(request):
         except (ValueError, TypeError):
             pass
 
+    # Check if GeoJSON download is enabled
+    show_download = _get_plugin_setting(
+        "show_download_geojson", journal=journal, repository=repository
+    )
+    show_download_geojson = show_download and show_download.value == "on"
+
     template_context = {
         "default_lat": default_lat.value if default_lat else 0,
         "default_lng": default_lng.value if default_lng else 0,
@@ -766,6 +772,9 @@ def map_page(request):
         "scope": "journal" if journal else ("repository" if repository else "press"),
         "site_name": site_name,
         "feature_opacity": feature_opacity,
+        "show_download_geojson": show_download_geojson,
+        "journal": journal,
+        "repository": repository,
     }
     template_context.update(_get_tile_config(journal=journal, repository=repository))
     template_context.update(_get_colour_config(journal=journal, repository=repository))
@@ -1337,8 +1346,17 @@ def download_article_geojson(request, article_id):
 
     response = JsonResponse(feature_collection)
     journal_slug = article.journal.code if article.journal else "unknown"
+
+    # Use DOI as identifier if available, otherwise use article ID
+    # Sanitize DOI for filename (replace / with _)
+    doi = article.get_doi()
+    if doi:
+        identifier = doi.replace("/", "_")
+    else:
+        identifier = str(article_id)
+
     response["Content-Disposition"] = (
-        f'attachment; filename="{journal_slug}-geometadata-article-{article_id}.geojson"'
+        f'attachment; filename="{journal_slug}-geometadata-{identifier}.geojson"'
     )
     return response
 
@@ -1377,5 +1395,53 @@ def download_issue_geojson(request, issue_id):
     journal_slug = issue.journal.code if issue.journal else "unknown"
     response["Content-Disposition"] = (
         f'attachment; filename="{journal_slug}-geometadata-issue-{issue_id}.geojson"'
+    )
+    return response
+
+
+@require_http_methods(["GET"])
+def download_journal_geojson(request):
+    """Download GeoJSON file for all articles in a journal."""
+    journal = getattr(request, "journal", None)
+    if not journal:
+        return JsonResponse({"error": "Journal context required"}, status=404)
+
+    geometadata_qs = (
+        ArticleGeometadata.objects.filter(
+            article__journal=journal,
+            geometry_wkt__isnull=False,
+        )
+        .exclude(geometry_wkt="")
+        .select_related("article", "article__journal")
+        .prefetch_related("article__issues")
+    )
+
+    features = []
+    for gm in geometadata_qs:
+        geojson = gm.to_geojson()
+        if geojson:
+            props = _build_rich_properties(gm.article, gm)
+            # Add issue information
+            issue = gm.article.primary_issue or gm.article.issues.first()
+            if issue:
+                props["issue"] = (
+                    issue.issue_title
+                    or f"Vol. {issue.volume} No. {issue.issue}"
+                )
+                props["issue_id"] = issue.pk
+            geojson["properties"] = props
+            features.append(geojson)
+
+    if not features:
+        return JsonResponse({"error": "No geometry data"}, status=404)
+
+    feature_collection = {
+        "type": "FeatureCollection",
+        "features": features,
+    }
+
+    response = JsonResponse(feature_collection)
+    response["Content-Disposition"] = (
+        f'attachment; filename="{journal.code}-geometadata-all.geojson"'
     )
     return response
