@@ -8,6 +8,8 @@
 
 This plugin adds geospatial and temporal metadata support for articles (journals) and preprints (repositories) in [Janeway](https://github.com/openlibhums/janeway).
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.18495577.svg)](https://doi.org/10.5281/zenodo.18495577)
+
 ## Background
 
 This plugin is part of the [KOMET](https://projects.tib.eu/komet/) project ("Kompetenznetzwerk für das Management und die Erschließung von textbasierten Forschungsdaten"), funded by the German Federal Ministry of Education and Research (BMBF).
@@ -584,3 +586,23 @@ consistent with Janeway.
 - [Janeway Issue #1928](https://github.com/openlibhums/janeway/issues/1928) - Original feature request
 - [Janeway Documentation](https://janeway.readthedocs.io/)
 - [Janeway Plugin Documentation](https://janeway.readthedocs.io/en/latest/dev/plugins.html)
+
+## Citation
+
+If you use this plugin in your research or publication workflow, please cite it:
+
+> Nüst, D. (2026). *Geometadata Plugin for Janeway* (v0.1.0). Zenodo. https://doi.org/10.5281/zenodo.18495577
+
+**BibTeX:**
+
+```bibtex
+@software{nust_geometadata_2026,
+  author       = {Nüst, Daniel},
+  title        = {Geometadata Plugin for Janeway},
+  year         = 2026,
+  publisher    = {Zenodo},
+  version      = {v0.1.0},
+  doi          = {10.5281/zenodo.18495577},
+  url          = {https://doi.org/10.5281/zenodo.18495577}
+}
+```

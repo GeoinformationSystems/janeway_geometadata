@@ -958,8 +958,7 @@ def all_geometadata_api(request):
                 issue = gm.article.primary_issue or gm.article.issues.first()
                 if issue:
                     geojson["properties"]["issue"] = (
-                        issue.issue_title
-                        or f"Vol. {issue.volume} No. {issue.issue}"
+                        issue.issue_title or f"Vol. {issue.volume} No. {issue.issue}"
                     )
                 features.append(geojson)
 
@@ -1425,8 +1424,7 @@ def download_journal_geojson(request):
             issue = gm.article.primary_issue or gm.article.issues.first()
             if issue:
                 props["issue"] = (
-                    issue.issue_title
-                    or f"Vol. {issue.volume} No. {issue.issue}"
+                    issue.issue_title or f"Vol. {issue.volume} No. {issue.issue}"
                 )
                 props["issue_id"] = issue.pk
             geojson["properties"] = props
