@@ -1,0 +1,5 @@
+# E2E testing dependencies
+pytest>=8.0
+pytest-django>=4.5
+pytest-playwright>=0.5
+playwright>=1.40

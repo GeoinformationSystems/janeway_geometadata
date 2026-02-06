@@ -1,4 +1,4 @@
-name: Unit Tests
+name: E2E Tests
 
 on:
   push:
@@ -7,8 +7,9 @@ on:
     branches: [main]
 
 jobs:
-  test:
+  e2e:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     steps:
       - name: Checkout Janeway
@@ -31,6 +32,7 @@ jobs:
             requirements.txt
             dev-requirements.txt
             src/plugins/geometadata/requirements.txt
+            src/plugins/geometadata/requirements-e2e.txt
 
       - name: Install dependencies
         run: |
@@ -38,18 +40,37 @@ jobs:
           pip install -r requirements.txt
           pip install -r dev-requirements.txt
           pip install -r src/plugins/geometadata/requirements.txt
+          pip install -r src/plugins/geometadata/requirements-e2e.txt
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('src/plugins/geometadata/requirements-e2e.txt') }}
+
+      - name: Install Playwright browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: playwright install --with-deps chromium
+
+      - name: Install Playwright browser deps (if cached)
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: playwright install-deps chromium
 
       - name: Set environment variables
         run: |
           echo "DB_VENDOR=sqlite" >> "$GITHUB_ENV"
           echo "JANEWAY_SETTINGS_MODULE=core.janeway_global_settings" >> "$GITHUB_ENV"
+          echo "DJANGO_ALLOW_ASYNC_UNSAFE=1" >> "$GITHUB_ENV"
 
-      - name: Check code formatting
-        run: ruff format --check src/plugins/geometadata/
-
-      - name: Lint code
-        run: ruff check src/plugins/geometadata/
-
-      - name: Run tests
+      - name: Run E2E tests
         working-directory: src
-        run: python manage.py test plugins.geometadata.tests.test_models plugins.geometadata.tests.test_views plugins.geometadata.tests.test_hooks plugins.geometadata.tests.test_forms plugins.geometadata.tests.test_geocoding --verbosity=2
+        run: pytest plugins/geometadata/tests/e2e/ -v
+
+      - name: Upload test artifacts
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-traces
+          path: src/plugins/geometadata/tests/e2e/test-results/
+          retention-days: 7
