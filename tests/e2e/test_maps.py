@@ -303,6 +303,10 @@ class TestGeoJSONDownloads:
 
     Verifies download headers and basic GeoJSON structure (FeatureCollection
     with correct feature count). Detailed content validation is done in unit tests.
+
+    Uses ``page.request.get()`` instead of ``page.goto()`` because the
+    download endpoints return ``Content-Disposition: attachment`` responses
+    which Playwright treats as file downloads rather than page navigations.
     """
 
     def test_article_geojson_download(
@@ -311,12 +315,8 @@ class TestGeoJSONDownloads:
         """Article GeoJSON download returns FeatureCollection with 1 feature."""
         url = f"{base_url}/plugins/geometadata/download/article/{article.pk}/geojson/"
 
-        # Use request context to get response body
-        with page.expect_response(url) as response_info:
-            page.goto(url)
-        response = response_info.value
+        response = page.request.get(url)
 
-        assert response is not None
         assert response.status == 200
 
         # Check for download headers
@@ -325,8 +325,7 @@ class TestGeoJSONDownloads:
         assert ".geojson" in content_disposition
 
         # Parse and validate GeoJSON structure
-        body = response.body().decode("utf-8")
-        geojson = json.loads(body)
+        geojson = response.json()
 
         assert geojson["type"] == "FeatureCollection"
         assert "features" in geojson
@@ -338,19 +337,15 @@ class TestGeoJSONDownloads:
         """Issue GeoJSON download returns FeatureCollection with 1 feature."""
         url = f"{base_url}/plugins/geometadata/download/issue/{issue.pk}/geojson/"
 
-        with page.expect_response(url) as response_info:
-            page.goto(url)
-        response = response_info.value
+        response = page.request.get(url)
 
-        assert response is not None
         assert response.status == 200
 
         content_disposition = response.headers.get("content-disposition", "")
         assert "attachment" in content_disposition
 
         # Parse and validate GeoJSON structure
-        body = response.body().decode("utf-8")
-        geojson = json.loads(body)
+        geojson = response.json()
 
         assert geojson["type"] == "FeatureCollection"
         assert "features" in geojson
@@ -362,19 +357,15 @@ class TestGeoJSONDownloads:
         """Journal GeoJSON download returns FeatureCollection with 1 feature."""
         url = f"{base_url}/plugins/geometadata/download/journal/geojson/"
 
-        with page.expect_response(url) as response_info:
-            page.goto(url)
-        response = response_info.value
+        response = page.request.get(url)
 
-        assert response is not None
         assert response.status == 200
 
         content_disposition = response.headers.get("content-disposition", "")
         assert "attachment" in content_disposition
 
         # Parse and validate GeoJSON structure
-        body = response.body().decode("utf-8")
-        geojson = json.loads(body)
+        geojson = response.json()
 
         assert geojson["type"] == "FeatureCollection"
         assert "features" in geojson
@@ -386,12 +377,8 @@ class TestGeoJSONDownloads:
         """GeoJSON features have required type, geometry, and properties."""
         url = f"{base_url}/plugins/geometadata/download/article/{article.pk}/geojson/"
 
-        with page.expect_response(url) as response_info:
-            page.goto(url)
-        response = response_info.value
-
-        body = response.body().decode("utf-8")
-        geojson = json.loads(body)
+        response = page.request.get(url)
+        geojson = response.json()
 
         # Check feature structure
         feature = geojson["features"][0]

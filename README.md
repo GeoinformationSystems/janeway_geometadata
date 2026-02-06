@@ -548,9 +548,115 @@ with sensible defaults for testing the geometadata plugin.
 
 ### Testing
 
+#### Local Development Setup
+
+For running tests outside of the Janeway Docker environment, create a virtual
+environment in the Janeway `src` directory:
+
+```bash
+cd path/to/janeway/src
+
+# Create and activate virtual environment
+python3 -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+
+# Install Janeway and plugin dependencies
+pip install -r ../requirements.txt -r ../dev-requirements.txt
+pip install -r plugins/geometadata/requirements.txt
+```
+
+The `.venv` directory is already in Janeway's `.gitignore`.
+
+**Note:** If you've previously run Janeway with Docker, log files may be owned
+by root. Fix with: `sudo chown -R $USER:$USER logs/`
+
+#### Unit Tests
+
+Run the Django unit tests with SQLite (requires environment variables):
+
 ```bash
 cd src
+source .venv/bin/activate  # If not already activated
+
+# Set required environment variables
+export DB_VENDOR=sqlite
+export JANEWAY_SETTINGS_MODULE=core.janeway_global_settings
+
+# Run all plugin tests
 python3 manage.py test plugins.geometadata
+
+# Or run specific test modules
+python3 manage.py test plugins.geometadata.tests.test_models
+python3 manage.py test plugins.geometadata.tests.test_geojson_validation
+```
+
+You can also set these variables inline:
+
+```bash
+DB_VENDOR=sqlite JANEWAY_SETTINGS_MODULE=core.janeway_global_settings \
+    python3 manage.py test plugins.geometadata
+```
+
+#### E2E Tests (Playwright)
+
+The plugin includes end-to-end tests using [Playwright](https://playwright.dev/python/) to verify map functionality in a real browser. These tests check that maps render correctly on article, issue, journal, and press pages.
+
+**Prerequisites:**
+
+```bash
+cd src
+source .venv/bin/activate  # If not already activated
+
+# Install E2E test dependencies
+pip install -r plugins/geometadata/requirements-e2e.txt
+
+# Install Playwright browsers (first time only)
+playwright install chromium
+```
+
+**Run E2E tests (headless):**
+
+```bash
+cd src
+source .venv/bin/activate
+export DB_VENDOR=sqlite
+export JANEWAY_SETTINGS_MODULE=core.janeway_global_settings
+
+pytest plugins/geometadata/tests/e2e/ -v
+```
+
+**Run E2E tests with visible browser** (useful for debugging or following along):
+
+```bash
+cd src
+source .venv/bin/activate
+DB_VENDOR=sqlite JANEWAY_SETTINGS_MODULE=core.janeway_global_settings \
+    pytest plugins/geometadata/tests/e2e/ -v --headed --slowmo=500
+```
+
+The `--headed` flag opens a browser window so you can watch the tests run.
+The `--slowmo=500` adds a 500ms delay between actions for easier observation.
+
+**Run a specific test:**
+
+```bash
+DB_VENDOR=sqlite JANEWAY_SETTINGS_MODULE=core.janeway_global_settings \
+    pytest plugins/geometadata/tests/e2e/test_maps.py::TestJournalMapPage::test_map_page_contains_leaflet_map -v --headed
+```
+
+**Test Artifacts:**
+
+When tests run, they generate several artifacts in `tests/e2e/test-results/`:
+
+| Artifact | Description |
+|---|---|
+| `screenshots/*.png` | Screenshots of map pages (captured for visual verification) |
+| `traces/*.zip` | Playwright traces for failed tests (can be viewed with `playwright show-trace`) |
+
+To view a trace file for debugging a failed test:
+
+```bash
+playwright show-trace tests/e2e/test-results/traces/test-name-trace.zip
 ```
 
 ### Code Style
