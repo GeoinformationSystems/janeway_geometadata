@@ -1,2 +1,3 @@
 geomet~=1.1
 geopy~=2.4
+geojson-validator>=0.6  # For GeoJSON validation in tests

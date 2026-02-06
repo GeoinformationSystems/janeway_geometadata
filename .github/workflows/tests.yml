@@ -52,4 +52,4 @@ jobs:
 
       - name: Run tests
         working-directory: src
-        run: python manage.py test plugins.geometadata.tests.test_models plugins.geometadata.tests.test_views plugins.geometadata.tests.test_hooks plugins.geometadata.tests.test_forms plugins.geometadata.tests.test_geocoding --verbosity=2
+        run: python manage.py test plugins.geometadata.tests.test_models plugins.geometadata.tests.test_views plugins.geometadata.tests.test_hooks plugins.geometadata.tests.test_forms plugins.geometadata.tests.test_geocoding plugins.geometadata.tests.test_geojson_validation --verbosity=2
