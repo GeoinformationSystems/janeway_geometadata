@@ -10,6 +10,7 @@ from django.test import override_settings
 from utils.testing import helpers
 
 from plugins.geometadata.models import ArticleGeometadata
+from plugins.geometadata.tests import factories
 from plugins.geometadata.tests.base import GeometadataTestCase
 
 
@@ -76,10 +77,8 @@ class ArticleAPITests(GeometadataTestCase):
 
     def test_api_article_geojson(self):
         """API returns valid GeoJSON Feature for article with geometadata."""
-        ArticleGeometadata.objects.create(
-            article=self.article,
-            geometry_wkt="POINT(10 50)",
-            place_name="Test",
+        factories.make_article_geometadata(
+            self.article, kind="point", temporal=None, place_name="Test"
         )
 
         response = self.client.get(
@@ -103,9 +102,8 @@ class ArticleAPITests(GeometadataTestCase):
 
     def test_api_all_returns_feature_collection(self):
         """All-articles API returns GeoJSON FeatureCollection."""
-        ArticleGeometadata.objects.create(
-            article=self.article,
-            geometry_wkt="POINT(10 50)",
+        factories.make_article_geometadata(
+            self.article, kind="point", temporal=None
         )
 
         response = self.client.get(
@@ -128,9 +126,10 @@ class ArticleDownloadTests(GeometadataTestCase):
 
     def test_download_article_geojson(self):
         """Download returns GeoJSON with Content-Disposition header."""
-        ArticleGeometadata.objects.create(
-            article=self.article,
-            geometry_wkt="POINT(10 50)",
+        factories.make_article_geometadata(
+            self.article,
+            kind="point",
+            temporal=None,
             place_name="Berlin",
             admin_units="Berlin, Germany",
         )
@@ -150,12 +149,12 @@ class ArticleDownloadTests(GeometadataTestCase):
 
     def test_download_article_includes_rich_properties(self):
         """Downloaded GeoJSON includes all expected article metadata properties."""
-        ArticleGeometadata.objects.create(
-            article=self.article,
-            geometry_wkt="POINT(10 50)",
+        factories.make_article_geometadata(
+            self.article,
+            kind="point",
+            temporal="year_only",
             place_name="Berlin",
             admin_units="Berlin, Germany",
-            temporal_periods=[["2020", "2021"]],
         )
 
         response = self.client.get(
@@ -202,9 +201,8 @@ class ArticleDownloadTests(GeometadataTestCase):
 
     def test_download_article_filename_uses_id_without_doi(self):
         """Download filename uses article ID when no DOI is set."""
-        ArticleGeometadata.objects.create(
-            article=self.article,
-            geometry_wkt="POINT(10 50)",
+        factories.make_article_geometadata(
+            self.article, kind="point", temporal=None
         )
 
         response = self.client.get(
@@ -230,9 +228,8 @@ class ArticleDownloadTests(GeometadataTestCase):
             article=self.article,
         )
 
-        ArticleGeometadata.objects.create(
-            article=self.article,
-            geometry_wkt="POINT(10 50)",
+        factories.make_article_geometadata(
+            self.article, kind="point", temporal=None
         )
 
         response = self.client.get(
@@ -266,9 +263,8 @@ class IssueAPITests(GeometadataTestCase):
 
     def test_api_issue_returns_feature_collection(self):
         """Issue API returns GeoJSON FeatureCollection."""
-        ArticleGeometadata.objects.create(
-            article=self.article,
-            geometry_wkt="POINT(10 50)",
+        factories.make_article_geometadata(
+            self.article, kind="point", temporal=None
         )
 
         response = self.client.get(
@@ -295,10 +291,8 @@ class IssueAPITests(GeometadataTestCase):
 
     def test_download_issue_geojson(self):
         """Issue download returns GeoJSON with Content-Disposition and rich properties."""
-        ArticleGeometadata.objects.create(
-            article=self.article,
-            geometry_wkt="POINT(10 50)",
-            place_name="Munich",
+        factories.make_article_geometadata(
+            self.article, kind="point", temporal=None, place_name="Munich"
         )
 
         response = self.client.get(
@@ -341,10 +335,8 @@ class IssueAPITests(GeometadataTestCase):
 
     def test_download_journal_geojson(self):
         """Journal download returns GeoJSON with Content-Disposition and rich properties."""
-        ArticleGeometadata.objects.create(
-            article=self.article,
-            geometry_wkt="POINT(10 50)",
-            place_name="Munich",
+        factories.make_article_geometadata(
+            self.article, kind="point", temporal=None, place_name="Munich"
         )
 
         response = self.client.get(
@@ -383,9 +375,8 @@ class IssueAPITests(GeometadataTestCase):
     def test_download_journal_includes_issue_info(self):
         """Journal download includes issue information when article is in an issue."""
         self.issue.articles.add(self.article)
-        ArticleGeometadata.objects.create(
-            article=self.article,
-            geometry_wkt="POINT(10 50)",
+        factories.make_article_geometadata(
+            self.article, kind="point", temporal=None
         )
 
         response = self.client.get(
@@ -430,16 +421,13 @@ class IssueAPITests(GeometadataTestCase):
             date_published="2024-01-02",
         )
 
-        # Only create geometadata for first two articles
-        ArticleGeometadata.objects.create(
-            article=self.article,
-            geometry_wkt="POINT(10 50)",
-            place_name="Munich",
+        # Only create geometadata for first two articles. Use two different
+        # WKT kinds so the test exercises mixed-geometry FeatureCollections.
+        factories.make_article_geometadata(
+            self.article, kind="point", temporal=None, place_name="Munich"
         )
-        ArticleGeometadata.objects.create(
-            article=article2,
-            geometry_wkt="POINT(20 60)",
-            place_name="Berlin",
+        factories.make_article_geometadata(
+            article2, kind="polygon", temporal=None, place_name="Berlin"
         )
         # No geometadata for article3
 
@@ -471,9 +459,8 @@ class PressAPITests(GeometadataTestCase):
 
     def test_api_press_returns_feature_collection(self):
         """Press API returns GeoJSON FeatureCollection with all articles."""
-        ArticleGeometadata.objects.create(
-            article=self.article,
-            geometry_wkt="POINT(10 50)",
+        factories.make_article_geometadata(
+            self.article, kind="point", temporal=None
         )
 
         response = self.client.get(
@@ -488,9 +475,8 @@ class PressAPITests(GeometadataTestCase):
 
     def test_api_press_includes_journal_name(self):
         """Press API features include journal name in properties."""
-        ArticleGeometadata.objects.create(
-            article=self.article,
-            geometry_wkt="POINT(10 50)",
+        factories.make_article_geometadata(
+            self.article, kind="point", temporal=None
         )
 
         response = self.client.get(

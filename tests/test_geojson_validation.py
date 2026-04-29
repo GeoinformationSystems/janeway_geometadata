@@ -21,7 +21,7 @@ except ImportError:
     HAS_GEOJSON_VALIDATOR = False
     validate_structure = None
 
-from plugins.geometadata.models import ArticleGeometadata
+from plugins.geometadata.tests import factories
 from plugins.geometadata.tests.base import GeometadataTestCase
 from utils.testing import helpers
 
@@ -42,26 +42,25 @@ class GeoJSONValidationTestCase(GeometadataTestCase):
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
-        # Create geometadata with Point geometry
-        cls.geometadata_point = ArticleGeometadata.objects.create(
-            article=cls.article,
-            geometry_wkt="POINT(13.4 52.5)",
-            place_name="Berlin",
+        # Point geometry from canonical sample (Berlin: 13.4050, 52.5200).
+        cls.geometadata_point = factories.make_article_geometadata(
+            cls.article,
+            kind="point",
+            temporal="modern_closed",
             admin_units="Berlin, Germany",
-            temporal_periods=[["2020-01-01", "2021-12-31"]],
         )
 
-        # Create second article with Polygon geometry
+        # Second article with Polygon geometry (continental Europe).
         cls.article_polygon = helpers.create_article(cls.journal, with_author=True)
         cls.article_polygon.stage = "Published"
         cls.article_polygon.date_published = "2024-01-15"
         cls.article_polygon.save()
 
-        cls.geometadata_polygon = ArticleGeometadata.objects.create(
-            article=cls.article_polygon,
-            geometry_wkt="POLYGON((10 50, 15 50, 15 55, 10 55, 10 50))",
-            place_name="Central Europe",
-            admin_units="Germany, Poland, Czech Republic",
+        cls.geometadata_polygon = factories.make_article_geometadata(
+            cls.article_polygon,
+            kind="polygon",
+            temporal=None,
+            admin_units="Continental Europe",
         )
 
         # Create issue with both articles
@@ -159,9 +158,9 @@ class ArticleGeoJSONValidationTests(GeoJSONValidationTestCase):
         geometry = geojson["features"][0]["geometry"]
         self.assertEqual(geometry["type"], "Point")
         self.assertEqual(len(geometry["coordinates"]), 2)
-        # Coordinates are [longitude, latitude]
-        self.assertAlmostEqual(geometry["coordinates"][0], 13.4, places=5)
-        self.assertAlmostEqual(geometry["coordinates"][1], 52.5, places=5)
+        # Coordinates are [longitude, latitude] for the canonical Berlin sample
+        self.assertAlmostEqual(geometry["coordinates"][0], 13.4050, places=4)
+        self.assertAlmostEqual(geometry["coordinates"][1], 52.5200, places=4)
 
     def test_article_geojson_polygon_coordinates(self):
         """Article GeoJSON Polygon has correct coordinate ring structure."""

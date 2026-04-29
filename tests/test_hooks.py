@@ -10,7 +10,7 @@ from html.parser import HTMLParser
 
 from django.template import Context, Template
 
-from plugins.geometadata.models import ArticleGeometadata
+from plugins.geometadata.tests import factories
 from plugins.geometadata.tests.base import GeometadataTestCase
 
 
@@ -59,11 +59,10 @@ class MetaTagsTemplateTests(GeometadataTestCase):
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
-        cls.geometadata = ArticleGeometadata.objects.create(
-            article=cls.article,
-            geometry_wkt="POLYGON((-10 35, 40 35, 40 70, -10 70, -10 35))",
-            place_name="Europe",
-            temporal_periods=[["2020-01-01", "2021-12-31"]],
+        # Same record as before (Europe polygon, 2020–2021), now via factory
+        # so the canonical WKT/temporal samples stay co-located in one place.
+        cls.geometadata = factories.make_article_geometadata(
+            cls.article, kind="polygon", temporal="modern_closed"
         )
 
     def _render_meta_tags(self, **context_overrides):

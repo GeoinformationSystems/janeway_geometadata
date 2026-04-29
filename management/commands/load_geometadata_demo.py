@@ -25,6 +25,27 @@ from django.utils import timezone
 from core.models import Account, File
 from journal.models import Issue, Journal
 from submission.models import Article, Keyword, Section
+from utils import setting_handler
+
+from plugins.geometadata import plugin_settings
+
+# Plugin settings turned on for the demo journal so that the embedded
+# HTML metadata and on-page widgets are visible without manual setup.
+DEMO_PLUGIN_SETTINGS = {
+    "enable_geometadata": "on",
+    "enable_spatial": "on",
+    "enable_temporal": "on",
+    "show_article_map": "on",
+    "show_article_temporal": "on",
+    "show_article_placenames": "on",
+    "show_issue_temporal": "on",
+    "show_download_geojson": "on",
+    "enable_map": "on",
+    "embed_dc_coverage": "on",
+    "embed_geo_meta": "on",
+    "embed_schema_spatial": "on",
+    "embed_geojson_link": "on",
+}
 
 
 class Command(BaseCommand):
@@ -58,6 +79,19 @@ class Command(BaseCommand):
             action="store_true",
             help="Clear existing demo articles before loading (matches by title prefix)",
         )
+        parser.add_argument(
+            "--skip-settings",
+            action="store_true",
+            help="Don't override the plugin settings on the target journal",
+        )
+        parser.add_argument(
+            "--with-preprints",
+            action="store_true",
+            help=(
+                "Also create a demo repository and preprints from "
+                "demo_preprints.json (covers full WKT palette)"
+            ),
+        )
 
     def handle(self, *args, **options):
         journal_code = options["journal_code"]
@@ -65,6 +99,8 @@ class Command(BaseCommand):
         owner_email = options["owner_email"]
         with_galleys = options["with_galleys"]
         clear_existing = options["clear_existing"]
+        skip_settings = options["skip_settings"]
+        with_preprints = options["with_preprints"]
 
         # Get or create journal
         if create_journal:
@@ -79,6 +115,9 @@ class Command(BaseCommand):
                 )
 
         self.stdout.write(f"Loading demo data into journal: {journal.name}")
+
+        if not skip_settings:
+            self._configure_plugin_settings(journal)
 
         # Get or create owner account
         owner = self._get_or_create_owner(owner_email)
@@ -129,6 +168,9 @@ class Command(BaseCommand):
         self.stdout.write(
             self.style.SUCCESS(f"Successfully created {total_articles} demo articles")
         )
+
+        if with_preprints:
+            self._load_demo_preprints(owner)
 
     def _get_data_dir(self):
         """Get the path to the test/data directory."""
@@ -208,6 +250,34 @@ class Command(BaseCommand):
         )
         return journal
 
+    def _configure_plugin_settings(self, journal):
+        """Turn on the geometadata plugin settings for the demo journal.
+
+        Without these explicit overrides the journal-level SettingValue rows
+        default to empty strings, which `is_setting_on` treats as off — so
+        embedded HTML metadata and on-page maps would not render.
+        """
+        plugin = plugin_settings.get_self()
+        if not plugin:
+            self.stdout.write(
+                self.style.WARNING(
+                    "geometadata plugin record not found; skipping settings."
+                )
+            )
+            return
+
+        for name, value in DEMO_PLUGIN_SETTINGS.items():
+            try:
+                setting_handler.save_plugin_setting(plugin, name, value, journal)
+            except Exception as e:
+                self.stdout.write(
+                    self.style.WARNING(f"Could not set plugin setting '{name}': {e}")
+                )
+
+        self.stdout.write(
+            f"Enabled {len(DEMO_PLUGIN_SETTINGS)} plugin settings on {journal.code}"
+        )
+
     def _get_or_create_owner(self, email):
         """Get or create the owner account for demo articles."""
         try:
@@ -227,6 +297,32 @@ class Command(BaseCommand):
                 self.style.WARNING(f"Created new user: {email} (password: demo123)")
             )
             return owner
+
+    def _get_or_create_demo_author_account(self, author_data):
+        """Get or create an Account for a demo preprint/article author.
+
+        Resolves an Account by email (synthesised from name when missing).
+        Newly-created accounts are inactive and use a stable derived
+        username so re-runs are idempotent.
+        """
+        first = author_data.get("first_name", "Demo").strip() or "Demo"
+        last = author_data.get("last_name", "Author").strip() or "Author"
+        email = author_data.get("email") or (
+            f"{first.lower()}.{last.lower()}@example.com".replace(" ", "")
+        )
+
+        account = Account.objects.filter(email=email).first()
+        if account:
+            return account
+
+        username = email.split("@")[0]
+        return Account.objects.create(
+            email=email,
+            username=username,
+            first_name=first,
+            last_name=last,
+            is_active=False,
+        )
 
     def _get_or_create_section(self, journal):
         """Get or create an 'Articles' section."""
@@ -418,6 +514,127 @@ class Command(BaseCommand):
         )
 
         return galley
+
+    def _load_demo_preprints(self, owner):
+        """Create demo repository and preprints from demo_preprints.json.
+
+        Idempotent: re-running won't duplicate the repository, and preprints
+        with existing matching titles are skipped.
+        """
+        from press.models import Press
+        from repository.models import (
+            Preprint,
+            PreprintAuthor,
+            PreprintFile,
+            Repository,
+            STAGE_PREPRINT_PUBLISHED,
+            Subject,
+        )
+
+        from plugins.geometadata.models import PreprintGeometadata
+
+        data = self._load_json_file("demo_preprints.json")
+        repo_data = data["repository"]
+
+        press = Press.objects.first()
+        if not press:
+            raise CommandError("No press found; cannot create demo repository.")
+
+        repository, repo_created = Repository.objects.get_or_create(
+            short_name=repo_data["short_name"],
+            defaults={
+                "press": press,
+                "name": repo_data["name"],
+                "object_name": repo_data.get("object_name", "Preprint"),
+                "object_name_plural": repo_data.get(
+                    "object_name_plural", "Preprints"
+                ),
+                "publisher": repo_data.get("publisher", ""),
+                "domain": repo_data.get("domain", "geo-repo.localhost"),
+                "live": True,
+            },
+        )
+        if repo_created:
+            self.stdout.write(
+                self.style.SUCCESS(f"Created repository: {repository.name}")
+            )
+        else:
+            self.stdout.write(f"Using existing repository: {repository.name}")
+
+        subject, _ = Subject.objects.get_or_create(
+            repository=repository,
+            slug=repo_data.get("subject_slug", "geospatial-research"),
+            defaults={
+                "name": repo_data.get("subject_name", "Geospatial Research"),
+                "enabled": True,
+            },
+        )
+
+        created_count = 0
+        for preprint_data in data["preprints"]:
+            title = preprint_data["title"]
+            if Preprint.objects.filter(repository=repository, title=title).exists():
+                self.stdout.write(f"  Skipping existing preprint: {title[:60]}...")
+                continue
+
+            submitted = self._parse_datetime(preprint_data.get("date_submitted"))
+            preprint = Preprint.objects.create(
+                repository=repository,
+                owner=owner,
+                title=title,
+                abstract=preprint_data.get("abstract", ""),
+                stage=STAGE_PREPRINT_PUBLISHED,
+                comments_editor="",
+                date_submitted=submitted or timezone.now(),
+                date_published=submitted,
+                date_accepted=submitted,
+            )
+            preprint.subject.add(subject)
+
+            # Author records — get-or-create an Account per author so that
+            # multi-author preprints don't collapse to the same fallback
+            # account (PreprintAuthor has unique(account, preprint)).
+            for i, author_data in enumerate(preprint_data.get("authors", []), start=1):
+                author_account = self._get_or_create_demo_author_account(author_data)
+                PreprintAuthor.objects.get_or_create(
+                    preprint=preprint,
+                    account=author_account,
+                    defaults={
+                        "order": i,
+                        "affiliation": author_data.get("affiliation", ""),
+                    },
+                )
+
+            # Stub submission file (the demo doesn't include a real PDF for
+            # each preprint — a small placeholder keeps the model satisfied).
+            preprint_file = PreprintFile.objects.create(
+                preprint=preprint,
+                original_filename=f"{repository.short_name}-{preprint.pk}.pdf",
+                mime_type="application/pdf",
+                size=0,
+            )
+            preprint.submission_file = preprint_file
+            preprint.save()
+
+            geo_data = preprint_data.get("geometadata", {})
+            if geo_data:
+                temporal_periods = geo_data.get("temporal_periods", [])
+                PreprintGeometadata.objects.update_or_create(
+                    preprint=preprint,
+                    defaults={
+                        "place_name": geo_data.get("place_name", ""),
+                        "admin_units": geo_data.get("admin_units", ""),
+                        "geometry_wkt": geo_data.get("geometry_wkt", ""),
+                        "temporal_periods": temporal_periods,
+                    },
+                )
+
+            created_count += 1
+            self.stdout.write(f"  Created preprint: {title[:60]}...")
+
+        self.stdout.write(
+            self.style.SUCCESS(f"Successfully created {created_count} demo preprints")
+        )
 
     def _clear_existing_demo_articles(self, journal):
         """Clear existing demo articles (articles from demo issues)."""

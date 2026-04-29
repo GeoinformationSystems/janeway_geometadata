@@ -1,0 +1,196 @@
+{
+  "_comment": "Demo preprints for the geometadata plugin. Cover the full WKT palette so the preprint hooks, maps, and embedded HTML metadata can be smoke-tested without writing fixtures by hand.",
+  "repository": {
+    "name": "Geometadata Demo Repository",
+    "short_name": "geo-repo",
+    "object_name": "Preprint",
+    "object_name_plural": "Preprints",
+    "publisher": "KOMET Demo Publisher",
+    "domain": "geo-repo.localhost",
+    "subject_name": "Geospatial Research",
+    "subject_slug": "geospatial-research"
+  },
+  "preprints": [
+    {
+      "title": "Urban heat-island sensors deployed in Berlin (Point)",
+      "abstract": "A point-located preprint demonstrating Point WKT coverage for a single sensor field in Berlin, Germany.",
+      "date_submitted": "2024-06-15",
+      "keywords": ["urban climate", "Berlin", "sensors", "Point"],
+      "authors": [
+        {"first_name": "Lena", "last_name": "Becker", "email": "lena.becker@example.com", "affiliation": "TU Berlin"}
+      ],
+      "geometadata": {
+        "place_name": "Berlin, Germany",
+        "admin_units": "Berlin, Germany",
+        "geometry_wkt": "POINT(13.4050 52.5200)",
+        "temporal_periods": [["2023-06-01", "2023-08-31"]]
+      }
+    },
+    {
+      "title": "Coastal walking transect from Sydney to Botany Bay (LineString)",
+      "abstract": "LineString example covering a coastal transect along the Sydney metropolitan shore.",
+      "date_submitted": "2024-07-01",
+      "keywords": ["coastal", "Sydney", "transect", "LineString"],
+      "authors": [
+        {"first_name": "Aroha", "last_name": "Williams", "email": "aroha.williams@example.com", "affiliation": "University of Sydney"}
+      ],
+      "geometadata": {
+        "place_name": "Sydney coastline, Australia",
+        "admin_units": "New South Wales, Australia",
+        "geometry_wkt": "LINESTRING(151.2093 -33.8688, 151.2200 -33.9000, 151.2400 -33.9500, 151.2200 -34.0000)",
+        "temporal_periods": [["2022-09-01", "2023-02-28"]]
+      }
+    },
+    {
+      "title": "Continental-scale habitat suitability for European bison (Polygon)",
+      "abstract": "Continental polygon coverage demonstrating broad-scale spatial extent.",
+      "date_submitted": "2024-07-10",
+      "keywords": ["biogeography", "Europe", "Polygon", "habitat"],
+      "authors": [
+        {"first_name": "Magdalena", "last_name": "Nowak", "email": "m.nowak@example.com", "affiliation": "Bialowieza Research Institute"}
+      ],
+      "geometadata": {
+        "place_name": "Europe",
+        "admin_units": "Europe",
+        "geometry_wkt": "POLYGON((-10 35, 40 35, 40 70, -10 70, -10 35))",
+        "temporal_periods": [["1990-01-01", "2024-12-31"]]
+      }
+    },
+    {
+      "title": "Land use mosaic with enclave reserve (Polygon with hole)",
+      "abstract": "Polygon-with-hole example. The interior ring represents a protected reserve excluded from the surveyed area.",
+      "date_submitted": "2024-08-02",
+      "keywords": ["land use", "reserve", "Polygon", "hole"],
+      "authors": [
+        {"first_name": "Tomás", "last_name": "Ferreira", "email": "tomas.ferreira@example.com", "affiliation": "Universidade de Lisboa"}
+      ],
+      "geometadata": {
+        "place_name": "Hypothetical study area with protected enclave",
+        "admin_units": "Portugal",
+        "geometry_wkt": "POLYGON((0 0, 10 0, 10 10, 0 10, 0 0), (2 2, 4 2, 4 4, 2 4, 2 2))",
+        "temporal_periods": [["2018-01-01", "2023-12-31"]]
+      }
+    },
+    {
+      "title": "Capital-cities air quality sample sites (MultiPoint)",
+      "abstract": "MultiPoint example covering distributed air-quality sampling sites in four European capitals.",
+      "date_submitted": "2024-08-15",
+      "keywords": ["air quality", "MultiPoint", "European capitals"],
+      "authors": [
+        {"first_name": "Sofía", "last_name": "Jiménez", "email": "sofia.jimenez@example.com", "affiliation": "ETH Zürich"},
+        {"first_name": "Pavel", "last_name": "Horák", "email": "pavel.horak@example.com", "affiliation": "Charles University"}
+      ],
+      "geometadata": {
+        "place_name": "European capital cities",
+        "admin_units": "France; Germany; United Kingdom; Italy",
+        "geometry_wkt": "MULTIPOINT((2.3522 48.8566), (13.4050 52.5200), (-0.1276 51.5074), (12.4964 41.9028))",
+        "temporal_periods": [["2024-01-01", "2024-12-31"]]
+      }
+    },
+    {
+      "title": "Two parallel river reaches in the southern US and Central Europe (MultiLineString)",
+      "abstract": "MultiLineString example. Two disjoint river reaches sampled with the same protocol.",
+      "date_submitted": "2024-09-10",
+      "keywords": ["hydrology", "MultiLineString", "rivers"],
+      "authors": [
+        {"first_name": "Henrik", "last_name": "Lindqvist", "email": "henrik.lindqvist@example.com", "affiliation": "Uppsala University"}
+      ],
+      "geometadata": {
+        "place_name": "Southern US and Central European reaches",
+        "admin_units": "USA; Germany",
+        "geometry_wkt": "MULTILINESTRING((-90 30, -85 35, -80 38), (10 50, 12 51, 14 52))",
+        "temporal_periods": [["2020-04-01", "2022-09-30"]]
+      }
+    },
+    {
+      "title": "Disjoint North-Atlantic island archipelago survey (MultiPolygon)",
+      "abstract": "MultiPolygon example. Two non-contiguous islands surveyed in the same campaign.",
+      "date_submitted": "2024-10-04",
+      "keywords": ["islands", "MultiPolygon", "archipelago"],
+      "authors": [
+        {"first_name": "Eilís", "last_name": "Ó Conchúir", "email": "eilis.oconchuir@example.com", "affiliation": "University College Cork"}
+      ],
+      "geometadata": {
+        "place_name": "North Atlantic islands",
+        "admin_units": "United Kingdom; Norway",
+        "geometry_wkt": "MULTIPOLYGON(((-2 50, 2 50, 2 54, -2 54, -2 50)), ((10 60, 16 60, 16 64, 10 64, 10 60)))",
+        "temporal_periods": [["2019-05-01", "2021-09-30"]]
+      }
+    },
+    {
+      "title": "Lake Zurich shoreline survey: combined point and transect (GeometryCollection)",
+      "abstract": "GeometryCollection example combining a single point of interest with a connected transect.",
+      "date_submitted": "2024-11-20",
+      "keywords": ["limnology", "Lake Zurich", "GeometryCollection"],
+      "authors": [
+        {"first_name": "Anya", "last_name": "Volkov", "email": "anya.volkov@example.com", "affiliation": "ETH Zürich"}
+      ],
+      "geometadata": {
+        "place_name": "Lake Zurich and shoreline",
+        "admin_units": "Zürich, Switzerland",
+        "geometry_wkt": "GEOMETRYCOLLECTION(POINT(8.5417 47.3769), LINESTRING(8.5 47.3, 8.6 47.4, 8.7 47.5))",
+        "temporal_periods": [["2023-04-01", "2023-10-31"]]
+      }
+    },
+    {
+      "title": "Holocene shoreline reconstruction with named period (deep time)",
+      "abstract": "Open-end temporal example using a named historical period (Holocene).",
+      "date_submitted": "2024-12-05",
+      "keywords": ["Holocene", "named period", "shoreline"],
+      "authors": [
+        {"first_name": "Bjarni", "last_name": "Þórðarson", "email": "bjarni.thordarson@example.com", "affiliation": "University of Iceland"}
+      ],
+      "geometadata": {
+        "place_name": "Northern Atlantic shorelines",
+        "admin_units": "Iceland; Norway; Greenland",
+        "geometry_wkt": "POINT(-22.6 65.0)",
+        "temporal_periods": [["Holocene", ""]]
+      }
+    },
+    {
+      "title": "Pacific antimeridian seabird tracking band (Polygon, antimeridian)",
+      "abstract": "Polygon spanning the antimeridian. Demonstrates that the plugin handles features that cross ±180°.",
+      "date_submitted": "2025-01-12",
+      "keywords": ["Pacific", "antimeridian", "seabirds"],
+      "authors": [
+        {"first_name": "Mei", "last_name": "Tanaka", "email": "mei.tanaka@example.com", "affiliation": "National Institute of Polar Research"}
+      ],
+      "geometadata": {
+        "place_name": "Equatorial Pacific antimeridian band",
+        "admin_units": "International waters",
+        "geometry_wkt": "POLYGON((170 -10, -170 -10, -170 10, 170 10, 170 -10))",
+        "temporal_periods": [["2022-01-01", "2024-12-31"]]
+      }
+    },
+    {
+      "title": "Multi-period climate proxy compilation",
+      "abstract": "Demonstrates a preprint with two non-contiguous study periods.",
+      "date_submitted": "2025-02-01",
+      "keywords": ["paleoclimate", "multi-period"],
+      "authors": [
+        {"first_name": "Olu", "last_name": "Adebayo", "email": "olu.adebayo@example.com", "affiliation": "University of Cape Town"}
+      ],
+      "geometadata": {
+        "place_name": "Southern Africa",
+        "admin_units": "South Africa; Namibia; Botswana",
+        "geometry_wkt": "POLYGON((15 -35, 35 -35, 35 -15, 15 -15, 15 -35))",
+        "temporal_periods": [["1990-01-01", "1995-12-31"], ["2010-01-01", "2015-12-31"]]
+      }
+    },
+    {
+      "title": "Open-end study of contemporary glacier retreat (open temporal end)",
+      "abstract": "Demonstrates an ongoing study with a fixed start and unspecified end.",
+      "date_submitted": "2025-03-10",
+      "keywords": ["glacier", "ongoing", "temporal", "open"],
+      "authors": [
+        {"first_name": "Klara", "last_name": "Berg", "email": "klara.berg@example.com", "affiliation": "Norwegian Polar Institute"}
+      ],
+      "geometadata": {
+        "place_name": "Svalbard, Norway",
+        "admin_units": "Svalbard, Norway",
+        "geometry_wkt": "POLYGON((10 76, 30 76, 30 81, 10 81, 10 76))",
+        "temporal_periods": [["2010-01-01", ""]]
+      }
+    }
+  ]
+}
