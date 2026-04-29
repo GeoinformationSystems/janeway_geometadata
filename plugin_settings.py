@@ -36,6 +36,41 @@ def get_self():
         return None
 
 
+def _force_press_default(setting, value):
+    """Force the press-level SettingValue for ``setting`` to ``value``.
+
+    Unlike ``setting_handler.get_or_create_default_setting``, which preserves
+    an existing row's value, this rewrites the press default on every
+    install. Used for toggles whose intended default-on (or default-off)
+    policy must converge across upgrades — early installs that captured a
+    different default would otherwise stay stuck on the old value forever.
+
+    Per-journal overrides remain untouched; only the row with ``journal=None``
+    is updated.
+    """
+    import core.models as core_models
+
+    sv, _ = core_models.SettingValue.objects.update_or_create(
+        setting=setting,
+        journal=None,
+        defaults={"value": value},
+    )
+    return sv
+
+
+# Embedding toggles whose press-level default should always reflect the
+# documented "default on" design. install_plugins re-applies these on
+# every run so a one-time empty default from an early install gets fixed.
+_DEFAULT_ON_EMBEDDING_SETTINGS = (
+    "embed_dc_coverage",
+    "embed_geo_meta",
+    "embed_schema_spatial",
+    "embed_geojson_link",
+    "embed_wkt",
+    "embed_iso19139",
+)
+
+
 def install():
     """Install the plugin and create necessary settings."""
     import core.models as core_models
@@ -541,6 +576,20 @@ def install():
         },
     )
     setting_handler.get_or_create_default_setting(setting, default_value="")
+
+    # Force press-level defaults for the embedding toggles so re-installs
+    # converge on the documented default-on policy (see comment on
+    # _DEFAULT_ON_EMBEDDING_SETTINGS).
+    for name in _DEFAULT_ON_EMBEDDING_SETTINGS:
+        try:
+            forced = core_models.Setting.objects.get(
+                name=name, group=setting_group
+            )
+            _force_press_default(forced, "on")
+        except core_models.Setting.DoesNotExist:
+            logger.warning(
+                "Embedding setting '%s' not found while forcing default", name
+            )
 
     logger.info(f"Geometadata plugin v{VERSION} installation complete.")
 

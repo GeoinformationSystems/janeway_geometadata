@@ -266,6 +266,28 @@
                         </p>
                     </div>
                 </div>
+                <div class="row">
+                    <div class="large-6 columns">
+                        <label>
+                            <input type="checkbox" name="embed_wkt"
+                                   {% if settings.embed_wkt == 'on' %}checked{% endif %}>
+                            {% trans "WKT Geometry Meta Tag" %}
+                        </label>
+                        <p class="help-text">
+                            {% trans "Embed the raw geometry as a Well-Known Text string in a DC.SpatialCoverage meta tag (alongside the GeoJSON variant)." %}
+                        </p>
+                    </div>
+                    <div class="large-6 columns">
+                        <label>
+                            <input type="checkbox" name="embed_iso19139"
+                                   {% if settings.embed_iso19139 == 'on' %}checked{% endif %}>
+                            {% trans "ISO 19139 XML" %}
+                        </label>
+                        <p class="help-text">
+                            {% trans "Embed an ISO 19139 EX_Extent XML fragment (geographic bounding box, geographic description, temporal extent) for geospatial data catalogs." %}
+                        </p>
+                    </div>
+                </div>
 
                 <hr>
 

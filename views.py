@@ -462,6 +462,8 @@ def manager(request):
                 "embed_geo_meta",
                 "embed_schema_spatial",
                 "embed_geojson_link",
+                "embed_iso19139",
+                "embed_wkt",
                 "geocoding_enabled",
             ]
             text_settings = [
@@ -529,6 +531,8 @@ def manager(request):
         "embed_geo_meta",
         "embed_schema_spatial",
         "embed_geojson_link",
+        "embed_iso19139",
+        "embed_wkt",
         "default_map_lat",
         "default_map_lng",
         "default_map_zoom",
