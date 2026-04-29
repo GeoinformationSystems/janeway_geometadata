@@ -29,7 +29,7 @@
   "funding": [
     {
       "funder": {
-        "name": "German Federal Ministry of Education and Research (BMBF)"
+        "name": "German Federal Ministry for Research, Technology Assessment and Space (BMFTR)"
       },
       "award": {
         "number": "16TOA039",
@@ -77,5 +77,5 @@
     "geoMetadata plugin for OJS: https://github.com/TIBHannover/geoMetadata",
     "OPTIMAP geospatial discovery portal: https://github.com/GeoinformationSystems/optimap"
   ],
-  "notes": "This work is funded by the German Federal Ministry of Education and Research (BMBF) under grant number 16TOA039. The KOMET project is part of the funding initiative 'Förderung von Projekten zur Etablierung einer gelebten Open-Access-Kultur in der deutschen Forschungs- und Wissenschaftspraxis.'"
+  "notes": "This work is funded by the German Federal Ministry for Research, Technology Assessment and Space (BMFTR) under grant number 16TOA039. The KOMET project is part of the funding initiative 'Förderung von Projekten zur Etablierung einer gelebten Open-Access-Kultur in der deutschen Forschungs- und Wissenschaftspraxis.'"
 }

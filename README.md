@@ -12,7 +12,7 @@ This plugin adds geospatial and temporal metadata support for articles (journals
 
 ## Background
 
-This plugin is part of the [KOMET](https://projects.tib.eu/komet/) project ("Kompetenznetzwerk für das Management und die Erschließung von textbasierten Forschungsdaten"), funded by the German Federal Ministry of Education and Research (BMBF).
+This plugin is part of the [KOMET](https://projects.tib.eu/komet/) project ("Kompetenznetzwerk für das Management und die Erschließung von textbasierten Forschungsdaten"), funded by the German Federal Ministry for Research, Technology Assessment and Space (BMFTR), formerly BMBF.
 It brings spatiotemporal metadata capabilities to the Janeway publishing platform, complementing existing work for [Open Journal Systems (OJS)](https://pkp.sfu.ca/software/ojs/).
 
 The plugin builds on concepts and experience from the [geoMetadata](https://github.com/TIBHannover/geoMetadata) plugin for OJS.
