@@ -46,6 +46,7 @@ DEMO_PLUGIN_SETTINGS = {
     "embed_schema_spatial": "on",
     "embed_geojson_link": "on",
     "embed_iso19139": "on",
+    "embed_wkt": "on",
 }
 
 

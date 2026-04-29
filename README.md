@@ -107,7 +107,8 @@ disabled, Schema.org output omits `temporalCoverage` but still includes
 
 | Setting | Default | Description |
 |---|---|---|
-| Dublin Core Coverage | on | Embed `DC.SpatialCoverage`, `DC.box`, `DC.temporal`, `DC.PeriodOfTime` meta tags |
+| Dublin Core Coverage | on | Embed `DC.SpatialCoverage` (GeoJSON), `DC.box`, `DC.temporal`, `DC.PeriodOfTime` meta tags |
+| WKT Geometry Meta Tag | on | Embed the raw geometry as `<meta name="DC.SpatialCoverage" scheme="WKT" content="...">` alongside the GeoJSON variant |
 | geo.* Meta Tags | on | Embed `geo.placename` meta tags |
 | Schema.org Coverage (JSON-LD) | on | Embed Schema.org `spatialCoverage`/`temporalCoverage` as JSON-LD |
 | GeoJSON Link Element | off | Include a `<link rel="alternate" type="application/geo+json">` to the GeoJSON API endpoint |

@@ -5,10 +5,18 @@
 
 {% if geometadata %}
 
-{% if embed_dc %}
-{# Dublin Core schema link #}
+{% if embed_dc or embed_wkt %}
+{# Dublin Core schema link — required for any DC.* tag (including the
+   WKT scheme variant), so emit it whenever any DC-style tag will appear. #}
 <link rel="schema.DC" href="http://purl.org/dc/elements/1.1/" />
+{% endif %}
 
+{% if embed_wkt and spatial_enabled and geometadata.geometry_wkt %}
+{# DC.SpatialCoverage: raw geometry as Well-Known Text (alongside GeoJSON) #}
+<meta name="DC.SpatialCoverage" scheme="WKT" content="{{ geometadata.geometry_wkt }}" />
+{% endif %}
+
+{% if embed_dc %}
 {% if geojson_str and spatial_enabled %}
 {# DC.SpatialCoverage: full GeoJSON geometry #}
 <meta name="DC.SpatialCoverage" scheme="GeoJSON" content="{{ geojson_str }}" />

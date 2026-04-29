@@ -492,6 +492,9 @@ def _inject_meta_tags(context, request):
     embed_iso19139 = logic.is_setting_on(
         "embed_iso19139", journal=journal, repository=repository
     )
+    embed_wkt = logic.is_setting_on(
+        "embed_wkt", journal=journal, repository=repository
+    )
 
     # Build GeoJSON
     geojson = geometadata.to_geojson() if spatial_enabled else None
@@ -557,6 +560,7 @@ def _inject_meta_tags(context, request):
             "embed_geojson": embed_geojson,
             "embed_iso19139": embed_iso19139,
             "iso19139_xml": iso19139_xml,
+            "embed_wkt": embed_wkt,
             "geojson_download_url": geojson_download_url,
             "spatial_enabled": spatial_enabled,
             "temporal_enabled": temporal_enabled,

@@ -313,6 +313,23 @@ def install():
     setting_handler.get_or_create_default_setting(setting, default_value="on")
 
     setting, _ = core_models.Setting.objects.get_or_create(
+        name="embed_wkt",
+        group=setting_group,
+        defaults={
+            "pretty_name": "Embed WKT Geometry Meta Tag",
+            "types": "boolean",
+            "description": (
+                "Embed the raw geometry as a Well-Known Text (WKT) string in "
+                "a <meta name=\"DC.SpatialCoverage\" scheme=\"WKT\"> tag, "
+                "alongside the GeoJSON DC.SpatialCoverage variant. Respects "
+                "the enable_spatial toggle."
+            ),
+            "is_translatable": False,
+        },
+    )
+    setting_handler.get_or_create_default_setting(setting, default_value="on")
+
+    setting, _ = core_models.Setting.objects.get_or_create(
         name="embed_iso19139",
         group=setting_group,
         defaults={

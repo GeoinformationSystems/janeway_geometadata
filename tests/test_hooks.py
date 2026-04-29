@@ -79,6 +79,7 @@ class MetaTagsTemplateTests(GeometadataTestCase):
             "embed_geo": True,
             "embed_schema": True,
             "embed_geojson": True,
+            "embed_wkt": True,
             "embed_iso19139": True,
             "iso19139_xml": (
                 '<gmd:EX_Extent xmlns:gmd="http://www.isotc211.org/2005/gmd"'
@@ -202,6 +203,7 @@ class MetaTagsTemplateTests(GeometadataTestCase):
             embed_geo=False,
             embed_schema=False,
             embed_geojson=False,
+            embed_wkt=False,
             embed_iso19139=False,
         )
         parsed = parse_html_meta(html)
@@ -227,6 +229,89 @@ class MetaTagsTemplateTests(GeometadataTestCase):
 
         # ISO 19139 script should be absent
         self.assertNotIn("application/xml", parsed.scripts)
+
+        # No DC.SpatialCoverage WKT scheme either
+        self.assertNotIn('scheme="WKT"', html)
+
+    def test_wkt_meta_tag_emitted_with_raw_geometry(self):
+        """When embed_wkt is on, raw WKT appears as DC.SpatialCoverage WKT."""
+        html = self._render_meta_tags()
+
+        # Both schemes coexist on the same name
+        self.assertIn(
+            f'scheme="WKT" content="{self.geometadata.geometry_wkt}"',
+            html,
+        )
+        self.assertIn('scheme="GeoJSON"', html)
+
+    def test_wkt_disabled_suppresses_only_wkt_meta(self):
+        """Toggling embed_wkt off keeps the GeoJSON variant intact."""
+        html = self._render_meta_tags(embed_wkt=False)
+
+        self.assertNotIn('scheme="WKT"', html)
+        # GeoJSON DC.SpatialCoverage is still there
+        self.assertIn('scheme="GeoJSON"', html)
+
+    def test_wkt_meta_skipped_when_spatial_disabled(self):
+        """When enable_spatial is off, no WKT tag even if embed_wkt is on."""
+        html = self._render_meta_tags(spatial_enabled=False)
+        self.assertNotIn('scheme="WKT"', html)
+
+    def test_dc_schema_link_present_when_only_wkt_enabled(self):
+        """Schema.DC link still emitted when only the WKT variant is on."""
+        html = self._render_meta_tags(
+            embed_dc=False,
+            embed_geo=False,
+            embed_schema=False,
+            embed_geojson=False,
+            embed_iso19139=False,
+        )
+        self.assertIn('rel="schema.DC"', html)
+        self.assertIn('scheme="WKT"', html)
+
+
+class WKTEmbeddingDiversityTests(GeometadataTestCase):
+    """Verify the WKT meta tag round-trips every WKT_SAMPLES kind verbatim."""
+
+    def test_every_sample_kind_appears_verbatim(self):
+        from django.template import Context, Template
+
+        from plugins.geometadata.tests import factories
+        from utils.testing import helpers
+
+        template = Template("{% include 'geometadata/meta_tags.html' %}")
+
+        for kind, wkt in factories.iter_kinds():
+            with self.subTest(kind=kind):
+                # Fresh article per kind because of the OneToOne constraint.
+                article = helpers.create_article(self.journal, with_author=True)
+                geo = factories.make_article_geometadata(article, kind=kind)
+
+                context = {
+                    "geometadata": geo,
+                    "geojson_str": "",
+                    "geojson_geometry_str": "",
+                    "temporal_intervals": [],
+                    "temporal_interval": "",
+                    "spatial_enabled": True,
+                    "temporal_enabled": True,
+                    "embed_dc": False,
+                    "embed_geo": False,
+                    "embed_schema": False,
+                    "embed_geojson": False,
+                    "embed_wkt": True,
+                    "embed_iso19139": False,
+                    "iso19139_xml": "",
+                    "geojson_download_url": "",
+                }
+                html = template.render(Context(context))
+
+                self.assertIn('scheme="WKT"', html, f"{kind}: WKT tag missing")
+                self.assertIn(
+                    wkt,
+                    html,
+                    f"{kind}: stored WKT not echoed verbatim into the meta tag",
+                )
 
 
 class ISO19139BuilderTests(GeometadataTestCase):
@@ -356,6 +441,7 @@ class ISO19139EmbeddingIntegrationTests(GeometadataTestCase):
             "embed_geo": False,
             "embed_schema": False,
             "embed_geojson": False,
+            "embed_wkt": False,
             "embed_iso19139": True,
             "iso19139_xml": _build_iso19139_extent(geo),
             "geojson_download_url": "",

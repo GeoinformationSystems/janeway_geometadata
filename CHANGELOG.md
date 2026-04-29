@@ -16,6 +16,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (place name), `EX_GeographicBoundingBox`, and one `gml:TimePeriod` per
   stored temporal period. Open-ended periods use
   `gml:indeterminatePosition="unknown"`. Closes #4.
+- **WKT meta tag** in article and preprint HTML head, controlled by a new
+  `embed_wkt` plugin setting (default on). Emits
+  `<meta name="DC.SpatialCoverage" scheme="WKT" content="...">` alongside
+  the existing GeoJSON variant. The DC schema link is now emitted whenever
+  any DC-style tag (DC or WKT) is enabled. Closes #27.
 
 ### Changed
 
