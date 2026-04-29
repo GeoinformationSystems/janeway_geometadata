@@ -312,6 +312,24 @@ def install():
     )
     setting_handler.get_or_create_default_setting(setting, default_value="on")
 
+    setting, _ = core_models.Setting.objects.get_or_create(
+        name="embed_iso19139",
+        group=setting_group,
+        defaults={
+            "pretty_name": "Embed ISO 19139 XML Metadata",
+            "types": "boolean",
+            "description": (
+                "Embed an ISO 19139 EX_Extent XML fragment (geographic "
+                "bounding box, geographic description and temporal extent) "
+                "as a <script type=\"application/xml\"> block in the article "
+                "HTML head. Respects the enable_spatial and enable_temporal "
+                "toggles."
+            ),
+            "is_translatable": False,
+        },
+    )
+    setting_handler.get_or_create_default_setting(setting, default_value="on")
+
     # Map colour settings
     setting, _ = core_models.Setting.objects.get_or_create(
         name="enable_map_colours",

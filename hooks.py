@@ -340,6 +340,105 @@ def inject_head_css(context, *args, **kwargs):
     return "\n".join(parts)
 
 
+def _build_iso19139_extent(geometadata, include_spatial=True, include_temporal=True):
+    """Render an ISO 19139 ``gmd:EX_Extent`` XML fragment for ``geometadata``.
+
+    The fragment encodes:
+
+    - ``gmd:EX_GeographicDescription`` with the place name (when present),
+    - ``gmd:EX_GeographicBoundingBox`` derived from the stored bbox,
+    - one ``gmd:EX_TemporalExtent`` / ``gml:TimePeriod`` per stored period.
+
+    The result is the bare ``<gmd:EX_Extent ...>...</gmd:EX_Extent>`` element
+    with all required namespace declarations on the root, ready to drop into
+    a ``<script type="application/xml">`` block. Returns an empty string if
+    nothing useful would be embedded after honouring the spatial/temporal
+    enable toggles.
+    """
+    from xml.sax.saxutils import escape as xml_escape
+
+    has_bbox = include_spatial and geometadata.bbox_north is not None
+    place_name = (geometadata.place_name or "").strip() if include_spatial else ""
+
+    valid_periods = []
+    if include_temporal:
+        for period in geometadata.temporal_periods or []:
+            start = (period[0] or "").strip()
+            end = (period[1] or "").strip()
+            if start or end:
+                valid_periods.append((start, end))
+
+    if not (has_bbox or place_name or valid_periods):
+        return ""
+
+    parts = [
+        '<gmd:EX_Extent xmlns:gmd="http://www.isotc211.org/2005/gmd"'
+        ' xmlns:gco="http://www.isotc211.org/2005/gco"'
+        ' xmlns:gml="http://www.opengis.net/gml/3.2">'
+    ]
+
+    if place_name:
+        parts.append(
+            f"  <gmd:description><gco:CharacterString>"
+            f"{xml_escape(place_name)}"
+            f"</gco:CharacterString></gmd:description>"
+        )
+        parts.append(
+            "  <gmd:geographicElement>"
+            "<gmd:EX_GeographicDescription>"
+            "<gmd:geographicIdentifier>"
+            "<gmd:MD_Identifier>"
+            f"<gmd:code><gco:CharacterString>{xml_escape(place_name)}"
+            "</gco:CharacterString></gmd:code>"
+            "</gmd:MD_Identifier>"
+            "</gmd:geographicIdentifier>"
+            "</gmd:EX_GeographicDescription>"
+            "</gmd:geographicElement>"
+        )
+
+    if has_bbox:
+        parts.append(
+            "  <gmd:geographicElement>"
+            "<gmd:EX_GeographicBoundingBox>"
+            f"<gmd:westBoundLongitude><gco:Decimal>{geometadata.bbox_west}"
+            "</gco:Decimal></gmd:westBoundLongitude>"
+            f"<gmd:eastBoundLongitude><gco:Decimal>{geometadata.bbox_east}"
+            "</gco:Decimal></gmd:eastBoundLongitude>"
+            f"<gmd:southBoundLatitude><gco:Decimal>{geometadata.bbox_south}"
+            "</gco:Decimal></gmd:southBoundLatitude>"
+            f"<gmd:northBoundLatitude><gco:Decimal>{geometadata.bbox_north}"
+            "</gco:Decimal></gmd:northBoundLatitude>"
+            "</gmd:EX_GeographicBoundingBox>"
+            "</gmd:geographicElement>"
+        )
+
+    for i, (start, end) in enumerate(valid_periods):
+        period_id = f"t{geometadata.pk or 0}-{i}"
+        begin = (
+            f"<gml:beginPosition>{xml_escape(start)}</gml:beginPosition>"
+            if start
+            else '<gml:beginPosition indeterminatePosition="unknown"/>'
+        )
+        end_el = (
+            f"<gml:endPosition>{xml_escape(end)}</gml:endPosition>"
+            if end
+            else '<gml:endPosition indeterminatePosition="unknown"/>'
+        )
+        parts.append(
+            "  <gmd:temporalElement>"
+            "<gmd:EX_TemporalExtent>"
+            "<gmd:extent>"
+            f'<gml:TimePeriod gml:id="{period_id}">{begin}{end_el}'
+            "</gml:TimePeriod>"
+            "</gmd:extent>"
+            "</gmd:EX_TemporalExtent>"
+            "</gmd:temporalElement>"
+        )
+
+    parts.append("</gmd:EX_Extent>")
+    return "\n".join(parts)
+
+
 def _inject_meta_tags(context, request):
     """
     Inject geospatial and temporal meta tags into <head> on
@@ -390,6 +489,9 @@ def _inject_meta_tags(context, request):
     embed_geojson = logic.is_setting_on(
         "embed_geojson_link", journal=journal, repository=repository, default=False
     )
+    embed_iso19139 = logic.is_setting_on(
+        "embed_iso19139", journal=journal, repository=repository
+    )
 
     # Build GeoJSON
     geojson = geometadata.to_geojson() if spatial_enabled else None
@@ -412,6 +514,19 @@ def _inject_meta_tags(context, request):
                 temporal_intervals.append(f"{start}/..")
             elif end:
                 temporal_intervals.append(f"../{end}")
+
+    # Build ISO 19139 XML fragment (only assembled when enabled, since the
+    # template just renders whatever string we pass through |safe).
+    iso19139_xml = ""
+    if embed_iso19139 and (
+        (spatial_enabled and geometadata.has_spatial_data())
+        or (temporal_enabled and geometadata.has_temporal_data())
+    ):
+        iso19139_xml = _build_iso19139_extent(
+            geometadata,
+            include_spatial=spatial_enabled,
+            include_temporal=temporal_enabled,
+        )
 
     # Build GeoJSON download URL
     geojson_download_url = ""
@@ -440,6 +555,8 @@ def _inject_meta_tags(context, request):
             "embed_geo": embed_geo,
             "embed_schema": embed_schema,
             "embed_geojson": embed_geojson,
+            "embed_iso19139": embed_iso19139,
+            "iso19139_xml": iso19139_xml,
             "geojson_download_url": geojson_download_url,
             "spatial_enabled": spatial_enabled,
             "temporal_enabled": temporal_enabled,

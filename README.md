@@ -111,6 +111,7 @@ disabled, Schema.org output omits `temporalCoverage` but still includes
 | geo.* Meta Tags | on | Embed `geo.placename` meta tags |
 | Schema.org Coverage (JSON-LD) | on | Embed Schema.org `spatialCoverage`/`temporalCoverage` as JSON-LD |
 | GeoJSON Link Element | off | Include a `<link rel="alternate" type="application/geo+json">` to the GeoJSON API endpoint |
+| ISO 19139 XML | on | Embed an ISO 19139 `gmd:EX_Extent` fragment (geographic bounding box, geographic description, and one `gml:TimePeriod` per temporal period) inside a `<script type="application/xml" id="geometadata-iso19139">` block |
 
 ### Map Colour Coding
 

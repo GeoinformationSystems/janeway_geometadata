@@ -9,7 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- ...
+- **ISO 19139 XML embedding** in article and preprint HTML head, controlled
+  by a new `embed_iso19139` plugin setting (default on). Emits a
+  `<script type="application/xml" id="geometadata-iso19139">` block
+  containing a `gmd:EX_Extent` fragment with `EX_GeographicDescription`
+  (place name), `EX_GeographicBoundingBox`, and one `gml:TimePeriod` per
+  stored temporal period. Open-ended periods use
+  `gml:indeterminatePosition="unknown"`. Closes #4.
 
 ### Changed
 

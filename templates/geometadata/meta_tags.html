@@ -69,4 +69,11 @@
 <link rel="alternate" type="application/geo+json" href="{{ geojson_download_url }}" />
 {% endif %}
 
+{% if embed_iso19139 and iso19139_xml %}
+{# ISO 19139 EX_Extent fragment for geospatial data catalogs / harvesters #}
+<script type="application/xml" id="geometadata-iso19139">
+{{ iso19139_xml|safe }}
+</script>
+{% endif %}
+
 {% endif %}
