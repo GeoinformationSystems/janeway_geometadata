@@ -490,3 +490,157 @@ class PressAPITests(GeometadataTestCase):
         self.assertIn("journal", props)
         self.assertIn("type", props)
         self.assertEqual(props["type"], "article")
+
+
+@override_settings(
+    URL_CONFIG="domain",
+    ROOT_URLCONF="plugins.geometadata.tests.urls",
+)
+class CrossJournalAPITests(GeometadataTestCase):
+    """Tests that exercise both ``cls.journal`` and ``cls.journal_two``.
+
+    Validates that:
+
+    - the press-wide API aggregates features across journals and tags each
+      feature with the right journal name,
+    - the journal-wide API and download isolate to the requesting journal,
+    - filenames embed the correct ``journal.code``.
+    """
+
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+
+        # Article on the primary journal — Berlin Point
+        cls.geo_one = factories.make_article_geometadata(
+            cls.article, kind="point", temporal=None
+        )
+
+        # Article on the secondary journal — Sydney Point (different
+        # hemisphere / continent so bbox-filter tests can distinguish).
+        cls.article_two = helpers.create_article(
+            cls.journal_two, with_author=True
+        )
+        cls.article_two.stage = "Published"
+        cls.article_two.date_published = "2024-02-01"
+        cls.article_two.title = "Cross-journal test article"
+        cls.article_two.save()
+
+        cls.geo_two = factories.make_article_geometadata(
+            cls.article_two, kind="point_southern", temporal=None
+        )
+
+    def _journal_names(self, features):
+        return {f["properties"].get("journal") for f in features}
+
+    # ---- press-wide API ----
+
+    def test_press_api_aggregates_articles_from_all_journals(self):
+        """Press API returns features from every journal that has data."""
+        response = self.client.get(
+            "/plugins/geometadata/api/press/",
+            SERVER_NAME=self.journal.domain,
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+
+        # Two articles, two features
+        self.assertEqual(data["type"], "FeatureCollection")
+        self.assertEqual(len(data["features"]), 2)
+
+        # Both journal names are represented
+        names = self._journal_names(data["features"])
+        self.assertEqual(names, {self.journal.name, self.journal_two.name})
+
+    def test_press_api_each_feature_tagged_with_its_journal(self):
+        """Each feature's `journal` property matches its own article."""
+        response = self.client.get(
+            "/plugins/geometadata/api/press/",
+            SERVER_NAME=self.journal.domain,
+        )
+        features_by_id = {
+            f["properties"]["id"]: f for f in response.json()["features"]
+        }
+
+        self.assertEqual(
+            features_by_id[self.article.pk]["properties"]["journal"],
+            self.journal.name,
+        )
+        self.assertEqual(
+            features_by_id[self.article_two.pk]["properties"]["journal"],
+            self.journal_two.name,
+        )
+
+    def test_press_api_bbox_filter_can_select_one_journal(self):
+        """A southern-hemisphere bbox excludes the northern article."""
+        # Bounds covering Sydney but not Berlin
+        response = self.client.get(
+            "/plugins/geometadata/api/press/",
+            {"north": "0", "south": "-50", "west": "100", "east": "180"},
+            SERVER_NAME=self.journal.domain,
+        )
+        data = response.json()
+
+        ids = [f["properties"]["id"] for f in data["features"]]
+        self.assertIn(self.article_two.pk, ids)
+        self.assertNotIn(self.article.pk, ids)
+
+    # ---- journal-wide API isolation ----
+
+    def test_journal_api_excludes_other_journals_articles(self):
+        """`/api/all/` on journal one only returns journal one's article."""
+        response = self.client.get(
+            "/plugins/geometadata/api/all/",
+            SERVER_NAME=self.journal.domain,
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+
+        ids = [f["properties"]["id"] for f in data["features"]]
+        self.assertEqual(ids, [self.article.pk])
+
+    def test_journal_api_per_journal_isolation_both_directions(self):
+        """Each journal's `/api/all/` only sees its own articles."""
+        for jrnl, expected_id in (
+            (self.journal, self.article.pk),
+            (self.journal_two, self.article_two.pk),
+        ):
+            with self.subTest(journal=jrnl.code):
+                response = self.client.get(
+                    "/plugins/geometadata/api/all/",
+                    SERVER_NAME=jrnl.domain,
+                )
+                ids = [
+                    f["properties"]["id"] for f in response.json()["features"]
+                ]
+                self.assertEqual(ids, [expected_id])
+
+    # ---- journal-wide download isolation ----
+
+    def test_journal_download_excludes_other_journals_articles(self):
+        """Journal download only contains the requesting journal's articles."""
+        response = self.client.get(
+            "/plugins/geometadata/download/journal/geojson/",
+            SERVER_NAME=self.journal.domain,
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(len(data["features"]), 1)
+
+        # Filename uses this journal's code, not the other one's
+        cd = response["Content-Disposition"]
+        self.assertIn(self.journal.code, cd)
+        self.assertNotIn(self.journal_two.code, cd)
+
+    def test_journal_download_filename_per_journal(self):
+        """Each journal's download filename embeds its own code."""
+        for jrnl in (self.journal, self.journal_two):
+            with self.subTest(journal=jrnl.code):
+                response = self.client.get(
+                    "/plugins/geometadata/download/journal/geojson/",
+                    SERVER_NAME=jrnl.domain,
+                )
+                self.assertEqual(response.status_code, 200)
+                self.assertIn(
+                    jrnl.code, response["Content-Disposition"]
+                )
