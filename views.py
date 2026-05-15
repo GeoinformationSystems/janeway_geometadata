@@ -124,73 +124,30 @@ def get_unavailable_settings(hook_availability):
 
 
 def _get_plugin_setting(setting_name, journal=None, repository=None):
-    """Helper to get plugin settings.
+    """Get a plugin setting honouring journal / repository / press scope.
 
-    When both journal and repository are None, returns press-level (default)
-    settings.
+    Thin wrapper around :func:`plugins.geometadata.logic.get_plugin_setting`
+    so the scope-precedence rule (per-journal SettingValue → per-repository
+    RepositoryPluginSetting → press-level default) is implemented in one
+    place.
     """
-    plugin = plugin_settings.get_self()
-    if not plugin:
-        return None
+    from plugins.geometadata import logic
 
-    # Determine context: journal, repository's press, or None (press-level)
-    context = journal or (repository.press if repository else None)
-    return setting_handler.get_plugin_setting(
-        plugin,
-        setting_name,
-        context,
-        create=False,
-    )
+    return logic.get_plugin_setting(setting_name, journal=journal, repository=repository)
 
 
 def _save_plugin_setting(setting_name, value, journal=None, repository=None):
+    """Save a plugin setting honouring journal / repository / press scope.
+
+    Thin wrapper around :func:`plugins.geometadata.logic.save_plugin_setting`.
+    Per-repository writes route to ``RepositoryPluginSetting``; journal and
+    press writes route to core's ``SettingValue`` via ``setting_handler``.
     """
-    Helper to save plugin settings, creating the setting if it doesn't exist.
+    from plugins.geometadata import logic
 
-    This is more robust than calling setting_handler.save_plugin_setting
-    directly, as it handles the case where the setting hasn't been created
-    yet (e.g., plugin updated but install_plugins not re-run).
-
-    When both journal and repository are None, saves press-level (default)
-    settings.
-    """
-    import core.models as core_models
-
-    plugin = plugin_settings.get_self()
-    if not plugin:
-        return None
-
-    # Determine context: journal, repository's press, or None (press-level)
-    context = journal or (repository.press if repository else None)
-
-    plugin_group_name = f"plugin:{plugin.name}"
-
-    # Ensure the setting group exists
-    setting_group, _ = core_models.SettingGroup.objects.get_or_create(
-        name=plugin_group_name,
+    return logic.save_plugin_setting(
+        setting_name, value, journal=journal, repository=repository
     )
-
-    # Check if the setting exists; if not, create it
-    try:
-        setting = core_models.Setting.objects.get(
-            name=setting_name,
-            group=setting_group,
-        )
-    except core_models.Setting.DoesNotExist:
-        # Create the setting with sensible defaults
-        setting = core_models.Setting.objects.create(
-            name=setting_name,
-            group=setting_group,
-            pretty_name=setting_name.replace("_", " ").title(),
-            types="char",
-            description="",
-            is_translatable=False,
-        )
-        # Create a default value
-        setting_handler.get_or_create_default_setting(setting, default_value="")
-
-    # Now save the value
-    return setting_handler.save_plugin_setting(plugin, setting_name, value, context)
 
 
 # Basemap providers available without API key or registration.

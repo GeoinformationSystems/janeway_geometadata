@@ -268,7 +268,8 @@ class ArticleGeometadata(AbstractGeometadata):
         verbose_name=_("Article"),
     )
 
-    class Meta:
+    class Meta(AbstractGeometadata.Meta):
+        abstract = False
         verbose_name = _("Article Geometadata")
         verbose_name_plural = _("Article Geometadata")
 
@@ -288,9 +289,59 @@ class PreprintGeometadata(AbstractGeometadata):
         verbose_name=_("Preprint"),
     )
 
-    class Meta:
+    class Meta(AbstractGeometadata.Meta):
+        abstract = False
         verbose_name = _("Preprint Geometadata")
         verbose_name_plural = _("Preprint Geometadata")
 
     def __str__(self):
         return f"Geometadata for Preprint {self.preprint.pk}"
+
+
+class RepositoryPluginSetting(models.Model):
+    """
+    Per-repository plugin setting override.
+
+    Core Janeway's ``setting_handler`` keys ``SettingValue`` rows on
+    ``Journal``, so passing a ``Repository`` (or its ``Press``) crashes
+    the downstream filter with ``ValueError: Cannot query "<Press>": Must
+    be "Journal" instance.`` This model provides repository-scoped
+    storage for the plugin's settings, kept intentionally narrow:
+    name + string value, no group / type / translation columns.
+
+    Resolution order at read time, implemented in
+    ``logic.get_plugin_setting``:
+
+    1. ``journal`` argument → core's per-journal ``SettingValue``.
+    2. ``repository`` argument → this model (if a row exists).
+    3. Otherwise → core's press-level default ``SettingValue``.
+
+    ``value`` shadows ``SettingValue.value`` (text). Callers use
+    ``is_setting_on`` / ``get_setting_value`` to coerce.
+    """
+
+    repository = models.ForeignKey(
+        "repository.Repository",
+        on_delete=models.CASCADE,
+        related_name="geometadata_settings",
+        verbose_name=_("Repository"),
+    )
+    setting_name = models.CharField(
+        max_length=200,
+        verbose_name=_("Setting name"),
+    )
+    value = models.TextField(
+        blank=True,
+        verbose_name=_("Value"),
+    )
+
+    class Meta:
+        verbose_name = _("Repository Plugin Setting")
+        verbose_name_plural = _("Repository Plugin Settings")
+        unique_together = ("repository", "setting_name")
+        indexes = [
+            models.Index(fields=["repository", "setting_name"]),
+        ]
+
+    def __str__(self):
+        return f"{self.repository.short_name}.{self.setting_name}={self.value!r}"

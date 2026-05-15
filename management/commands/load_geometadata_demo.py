@@ -29,25 +29,39 @@ from utils import setting_handler
 
 from plugins.geometadata import plugin_settings
 
-# Plugin settings turned on for the demo journal so that the embedded
-# HTML metadata and on-page widgets are visible without manual setup.
+# Plugin settings turned on for the demo journal AND the demo repository so
+# that every feature of the plugin is visible without manual setup. The
+# full boolean-toggle surface (see ``views.manager``'s ``boolean_settings``
+# list) is enabled here — anything missing would hide data or disable a
+# feature on the demo site.
 DEMO_PLUGIN_SETTINGS = {
+    # Core opt-ins
     "enable_geometadata": "on",
     "enable_spatial": "on",
     "enable_temporal": "on",
+    "enable_map": "on",
+    # Submission policy — the demo asks authors to provide geometadata so
+    # the submission flow exercises the form's required-field behaviour.
+    "require_geometadata": "on",
+    # Article / issue page widgets
     "show_article_map": "on",
     "show_article_temporal": "on",
     "show_article_placenames": "on",
     "show_issue_temporal": "on",
+    # Downloads & overlap picker
     "show_download_geojson": "on",
-    "enable_map": "on",
+    "enable_overlap_picker": "on",
+    # Map colour coding (aggregated maps)
+    "enable_map_colours": "on",
+    # HTML head metadata embeddings
     "embed_dc_coverage": "on",
     "embed_geo_meta": "on",
     "embed_schema_spatial": "on",
     "embed_geojson_link": "on",
     "embed_iso19139": "on",
     "embed_wkt": "on",
-    "enable_overlap_picker": "on",
+    # Reverse geocoding helper in the editor widget
+    "geocoding_enabled": "on",
 }
 
 
@@ -279,6 +293,30 @@ class Command(BaseCommand):
 
         self.stdout.write(
             f"Enabled {len(DEMO_PLUGIN_SETTINGS)} plugin settings on {journal.code}"
+        )
+
+    def _configure_repository_plugin_settings(self, repository):
+        """Mirror DEMO_PLUGIN_SETTINGS into the per-repository store.
+
+        With ``RepositoryPluginSetting`` in place, demo repositories
+        carry their own toggle state rather than relying on the
+        press-level fallback. The set of settings mirrored is exactly
+        ``DEMO_PLUGIN_SETTINGS`` — the same toggles the demo journal
+        receives — so the demo repository's behaviour matches the demo
+        journal's.
+        """
+        from plugins.geometadata.models import RepositoryPluginSetting
+
+        for name, value in DEMO_PLUGIN_SETTINGS.items():
+            RepositoryPluginSetting.objects.update_or_create(
+                repository=repository,
+                setting_name=name,
+                defaults={"value": value},
+            )
+
+        self.stdout.write(
+            f"Enabled {len(DEMO_PLUGIN_SETTINGS)} plugin settings on "
+            f"repository {repository.short_name}"
         )
 
     def _get_or_create_owner(self, email):
@@ -595,6 +633,8 @@ class Command(BaseCommand):
             )
         else:
             self.stdout.write(f"Using existing repository: {repository.name}")
+
+        self._configure_repository_plugin_settings(repository)
 
         subject, _ = Subject.objects.get_or_create(
             repository=repository,

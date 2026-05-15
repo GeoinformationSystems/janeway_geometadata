@@ -24,54 +24,71 @@ logger = get_logger(__name__)
 
 
 def get_plugin_setting(setting_name, journal=None, repository=None):
-    """
-    Get a plugin setting value.
+    """Get a plugin setting value, honouring scope precedence.
 
-    :param setting_name: Name of the setting
-    :param journal: Journal context (optional)
-    :param repository: Repository context (optional)
-    :return: SettingValue object or None
+    Resolution order:
 
-    When both journal and repository are None, returns press-level (default)
-    settings.
+    1. ``journal`` argument → core's per-journal ``SettingValue``.
+    2. ``repository`` argument → ``RepositoryPluginSetting`` row (if any).
+    3. Press-level default ``SettingValue`` (``journal=None`` in core's
+       ``setting_handler``).
+
+    Returns ``None`` when the plugin record is missing; otherwise returns
+    an object exposing a ``value`` attribute (either a ``SettingValue``
+    or a ``RepositoryPluginSetting`` — both quack the same).
     """
     plugin = plugin_settings.get_self()
     if not plugin:
         return None
 
-    # Determine context: journal, repository's press, or None (press-level)
-    context = journal or (repository.press if repository else None)
+    if repository and not journal:
+        # Per-repository override stored in our own table.
+        from plugins.geometadata.models import RepositoryPluginSetting
+
+        try:
+            return RepositoryPluginSetting.objects.get(
+                repository=repository,
+                setting_name=setting_name,
+            )
+        except RepositoryPluginSetting.DoesNotExist:
+            # Fall through to press-level default below.
+            pass
+
     return setting_handler.get_plugin_setting(
         plugin,
         setting_name,
-        context,
+        journal,
         create=False,
     )
 
 
 def save_plugin_setting(setting_name, value, journal=None, repository=None):
-    """
-    Save a plugin setting, creating it if it doesn't exist.
+    """Save a plugin setting, creating the underlying ``Setting`` row
+    on demand for journal / press scopes.
 
-    This is more robust than calling setting_handler.save_plugin_setting
-    directly, as it handles the case where the setting hasn't been created
-    yet (e.g., plugin updated but install_plugins not re-run).
+    Scope routing:
 
-    :param setting_name: Name of the setting
-    :param value: Value to save
-    :param journal: Journal context (optional)
-    :param repository: Repository context (optional)
-    :return: SettingValue object or None
-
-    When both journal and repository are None, saves press-level (default)
-    settings.
+    - ``repository`` (no journal): ``update_or_create`` a
+      ``RepositoryPluginSetting`` row. The plugin's per-repository store
+      is intentionally narrow (name + string value); no group / type /
+      translation columns are tracked.
+    - ``journal`` or neither: route to core's ``SettingValue`` via
+      ``setting_handler``, creating the ``Setting`` row first if the
+      plugin shipped a new setting after ``install_plugins`` last ran.
     """
     plugin = plugin_settings.get_self()
     if not plugin:
         return None
 
-    # Determine context: journal, repository's press, or None (press-level)
-    context = journal or (repository.press if repository else None)
+    if repository and not journal:
+        from plugins.geometadata.models import RepositoryPluginSetting
+
+        row, _ = RepositoryPluginSetting.objects.update_or_create(
+            repository=repository,
+            setting_name=setting_name,
+            defaults={"value": value},
+        )
+        return row
 
     plugin_group_name = f"plugin:{plugin.name}"
 
@@ -100,7 +117,7 @@ def save_plugin_setting(setting_name, value, journal=None, repository=None):
         setting_handler.get_or_create_default_setting(setting, default_value="")
 
     # Now save the value
-    return setting_handler.save_plugin_setting(plugin, setting_name, value, context)
+    return setting_handler.save_plugin_setting(plugin, setting_name, value, journal)
 
 
 def is_enabled(journal=None, repository=None):

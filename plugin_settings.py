@@ -58,18 +58,47 @@ def _force_press_default(setting, value):
     return sv
 
 
-# Embedding toggles whose press-level default should always reflect the
-# documented "default on" design. install_plugins re-applies these on
-# every run so a one-time empty default from an early install gets fixed.
+# Boolean toggles whose press-level default must always converge to "on"
+# across re-installs. ``install_plugins`` (the standard Janeway management
+# command) re-applies these on every run so a one-time empty default from
+# an early install gets fixed.
+#
+# This is the canonical "show every available piece of data" set for both
+# journals and repositories: a fresh repository that has no per-repository
+# ``RepositoryPluginSetting`` rows falls back to these press values, so
+# turning them on at the press level is what makes "the defaults for a
+# repository show all available data" true without any per-repo
+# configuration. The matching subset is mirrored explicitly into the demo
+# repository by ``load_geometadata_demo._configure_repository_plugin_settings``.
+#
+# Settings deliberately NOT in this list:
+# - ``enable_geometadata``: per-journal opt-in; not appropriate to force on
+#   for every journal on a multi-journal press.
+# - ``require_geometadata``: submission-policy decision left to journal
+#   editors — the demo turns it on to exercise the required-field path,
+#   but real journals should opt in deliberately.
 _DEFAULT_ON_EMBEDDING_SETTINGS = (
+    # HTML head metadata embeddings
     "embed_dc_coverage",
     "embed_geo_meta",
     "embed_schema_spatial",
     "embed_geojson_link",
     "embed_wkt",
     "embed_iso19139",
-    # Display/interaction defaults that should converge across upgrades.
+    # Map page and aggregated-view feature toggles
+    "enable_map",
     "enable_overlap_picker",
+    "enable_map_colours",
+    "show_download_geojson",
+    # Per-article / per-issue display widgets
+    "show_article_map",
+    "show_article_temporal",
+    "show_article_placenames",
+    "show_issue_temporal",
+    # Author-facing capabilities
+    "enable_spatial",
+    "enable_temporal",
+    "geocoding_enabled",
 )
 
 

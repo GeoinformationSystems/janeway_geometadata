@@ -21,10 +21,16 @@
         </div>
         <div class="content">
             <p>
-                {% trans "Configure geospatial and temporal metadata collection and display for this journal/repository." %}
+                {% if request.journal %}
+                    {% blocktrans with name=request.journal.name %}Configure geospatial and temporal metadata for the <strong>{{ name }}</strong> journal. Per-journal toggles override the press-level defaults.{% endblocktrans %}
+                {% elif request.repository %}
+                    {% blocktrans with name=request.repository.name %}Configure geospatial and temporal metadata for the <strong>{{ name }}</strong> repository. Per-repository toggles override the press-level defaults and are stored in the plugin's own <code>RepositoryPluginSetting</code> table.{% endblocktrans %}
+                {% else %}
+                    {% trans "Configure press-level defaults for geospatial and temporal metadata. These are inherited by every journal and repository that doesn't carry its own override." %}
+                {% endif %}
             </p>
 
-            {% if unavailable_settings %}
+            {% if unavailable_settings and not request.repository %}
             <div class="callout warning">
                 <h5><i class="fa fa-exclamation-triangle"></i> {% trans "Template Modifications Required" %}</h5>
                 <p>
@@ -174,6 +180,7 @@
                     </div>
                 </div>
 
+                {% if not request.repository %}
                 <hr>
 
                 <div class="row">
@@ -201,6 +208,7 @@
                         </p>
                     </div>
                 </div>
+                {% endif %}
 
                 <hr>
 
@@ -902,18 +910,30 @@
         previewTileLayer = L.tileLayer.provider(providerKey).addTo(previewMap);
     }
 
+    // Sync the attribution preview to whichever option is currently
+    // selected in the dropdown. Server-side, the preview's contents are
+    // rendered by looping ``basemap_providers`` and matching against
+    // ``settings.map_tile_provider``; on first-time setup that setting is
+    // empty so no key matches and the div renders blank, even though the
+    // dropdown browser-defaults to its first <option>. Calling this on
+    // page load makes the dropdown's selection the single source of truth.
+    function syncBasemapAttributionPreview() {
+        var preview = document.getElementById('basemap-attribution-preview');
+        var providerSelect = document.getElementById('basemap-provider-select');
+        if (!preview || !providerSelect || providerSelect.selectedIndex < 0) return;
+        var option = providerSelect.options[providerSelect.selectedIndex];
+        preview.innerHTML = option.getAttribute('data-attribution') || '';
+    }
+
     function updateMapPreviewBasemap() {
+        // Always sync the attribution text, even if the map preview is not
+        // ready yet — it's a pure DOM update that doesn't depend on Leaflet.
+        syncBasemapAttributionPreview();
+
         if (!previewMap || !previewTileLayer) return;
 
         var providerSelect = document.getElementById('basemap-provider-select');
         var providerKey = providerSelect ? providerSelect.value : 'OpenStreetMap.Mapnik';
-
-        // Update attribution preview text
-        var preview = document.getElementById('basemap-attribution-preview');
-        if (preview && providerSelect) {
-            var option = providerSelect.options[providerSelect.selectedIndex];
-            preview.innerHTML = option.getAttribute('data-attribution') || '';
-        }
 
         // Replace tile layer
         previewMap.removeLayer(previewTileLayer);
@@ -970,11 +990,16 @@
         // Initialize map preview
         initMapPreview();
 
-        // Bind basemap provider change to map preview update
+        // Bind basemap provider change to map preview update, and sync the
+        // attribution preview to the dropdown's initial selection so it
+        // isn't blank on first-time setup (settings.map_tile_provider is
+        // empty until the form is submitted at least once, but the dropdown
+        // still has a browser-default first <option>).
         var basemapSelect = document.getElementById('basemap-provider-select');
         if (basemapSelect) {
             basemapSelect.addEventListener('change', updateMapPreviewBasemap);
         }
+        syncBasemapAttributionPreview();
 
         // Bind default view settings to map preview update
         var latInput = document.getElementById('id_default_map_lat');
