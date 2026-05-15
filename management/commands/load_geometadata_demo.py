@@ -518,6 +518,38 @@ class Command(BaseCommand):
 
         return galley
 
+    # Shared on-disk location for the demo placeholder PDF inside
+    # PreprintFile's storage backend. All demo PreprintFile rows point
+    # at the same path so the git repo only ships
+    # `test/data/placeholder.pdf` and the file system has one copy.
+    _DEMO_PDF_STORAGE_NAME = "repos/_demo_placeholder.pdf"
+
+    def _demo_pdf_storage_path(self, preprint_file_cls):
+        """Ensure the shared demo placeholder PDF exists in storage and
+        return its storage-relative path.
+
+        The PDF is copied from ``test/data/placeholder.pdf`` into the
+        ``PreprintFile.file`` storage backend exactly once. Subsequent
+        calls are O(1) (a single ``storage.exists`` probe).
+        """
+        from django.core.files.base import ContentFile
+
+        storage = preprint_file_cls._meta.get_field("file").storage
+        if not storage.exists(self._DEMO_PDF_STORAGE_NAME):
+            placeholder = os.path.join(self._get_data_dir(), "placeholder.pdf")
+            with open(placeholder, "rb") as f:
+                storage.save(self._DEMO_PDF_STORAGE_NAME, ContentFile(f.read()))
+        return self._DEMO_PDF_STORAGE_NAME
+
+    def _demo_pdf_size(self, preprint_file_cls):
+        """Return the byte size of the shared demo placeholder PDF."""
+        storage = preprint_file_cls._meta.get_field("file").storage
+        try:
+            return storage.size(self._DEMO_PDF_STORAGE_NAME)
+        except (FileNotFoundError, NotImplementedError):
+            placeholder = os.path.join(self._get_data_dir(), "placeholder.pdf")
+            return os.path.getsize(placeholder)
+
     def _load_demo_preprints(self, owner):
         """Create demo repository and preprints from demo_preprints.json.
 
@@ -573,6 +605,24 @@ class Command(BaseCommand):
             },
         )
 
+        # Heal any pre-existing PreprintFile rows in this repository that
+        # were created by an earlier loader version without an actual
+        # file on disk (FieldField empty). Clicking download on those
+        # 500s with "no file associated with it".
+        shared_pdf_path = self._demo_pdf_storage_path(PreprintFile)
+        shared_pdf_size = self._demo_pdf_size(PreprintFile)
+        healed = PreprintFile.objects.filter(
+            preprint__repository=repository,
+            file="",
+        ).update(file=shared_pdf_path, size=shared_pdf_size)
+        if healed:
+            self.stdout.write(
+                self.style.WARNING(
+                    f"  Healed {healed} PreprintFile rows that were missing "
+                    f"file content (pointed at shared demo placeholder)"
+                )
+            )
+
         created_count = 0
         for preprint_data in data["preprints"]:
             title = preprint_data["title"]
@@ -608,13 +658,17 @@ class Command(BaseCommand):
                     },
                 )
 
-            # Stub submission file (the demo doesn't include a real PDF for
-            # each preprint — a small placeholder keeps the model satisfied).
+            # Submission file. All demo PreprintFile rows reference the
+            # same on-disk placeholder PDF (copied once into storage by
+            # `_demo_pdf_storage_path`), so the git repo only carries the
+            # single test/data/placeholder.pdf and download-link clicks
+            # don't 500 with "no file associated".
             preprint_file = PreprintFile.objects.create(
                 preprint=preprint,
+                file=shared_pdf_path,
                 original_filename=f"{repository.short_name}-{preprint.pk}.pdf",
                 mime_type="application/pdf",
-                size=0,
+                size=shared_pdf_size,
             )
             preprint.submission_file = preprint_file
             preprint.save()
