@@ -6,8 +6,8 @@
 {% if geometadata %}
 
 {% if embed_dc or embed_wkt %}
-{# Dublin Core schema link — required for any DC.* tag (including the
-   WKT scheme variant), so emit it whenever any DC-style tag will appear. #}
+{% comment %}Dublin Core schema link — required for any DC.* tag (including the
+WKT scheme variant), so emit it whenever any DC-style tag will appear.{% endcomment %}
 <link rel="schema.DC" href="http://purl.org/dc/elements/1.1/" />
 {% endif %}
 
