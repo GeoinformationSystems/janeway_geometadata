@@ -86,12 +86,16 @@
         var i18nOverlapPrev = '{% trans "Previous article" %}';
         var i18nOverlapNext = '{% trans "Next article" %}';
 
-        // Initialize map
+        // Initialize map. ``|default`` is belt-and-suspenders: the view
+        // (_setting_number) already coerces these to numbers, but if any
+        // future code path forgets to and renders ``None``, the template
+        // still produces valid coordinates instead of ``setView([None,
+        // None], …)`` → ``Leaflet: t is null``.
         var map = L.map('geometadata-fullmap', {
             zoomControl: false
         }).setView(
-            [{{ default_lat }}, {{ default_lng }}],
-            {{ default_zoom }}
+            [{{ default_lat|default:0 }}, {{ default_lng|default:0 }}],
+            {{ default_zoom|default:2 }}
         );
         // Expose for E2E tests — see tests/e2e/test_maps.py. Harmless in
         // production: this is just a handle, not an extra DOM element.

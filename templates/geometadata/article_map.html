@@ -10,19 +10,26 @@
     <h2>{% trans "Time and Location" %}</h2>
 
     {% if show_temporal and geometadata.has_temporal_data %}
-    <ul class="geometadata-temporal">
-        {% for period_display in geometadata.get_temporal_display %}
-        <li><span class="geometadata-dates">{{ period_display }}</span></li>
-        {% endfor %}
-    </ul>
+    <div class="geometadata-temporal">
+        {% with prose=geometadata.get_temporal_prose %}
+        {% if prose|length == 1 %}
+        <p>{% blocktrans with content_kind=content_type|default:"work" period=prose.0 %}This {{ content_kind }} covers the time period <span class="geometadata-dates">{{ period }}</span>.{% endblocktrans %}</p>
+        {% elif prose|length > 1 %}
+        <p>{% blocktrans with content_kind=content_type|default:"work" %}This {{ content_kind }} covers the following time periods:{% endblocktrans %}</p>
+        <ul class="geometadata-temporal-list">
+            {% for fragment in prose %}
+            <li><span class="geometadata-dates">{{ fragment }}</span></li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+        {% endwith %}
+    </div>
     {% endif %}
 
     {% if has_geometry %}
     <div class="geometadata-spatial">
         {% if show_placenames and geometadata.place_name %}
-        <ul>
-            <li>{{ geometadata.place_name }}</li>
-        </ul>
+        <p class="geometadata-placename">{% blocktrans with content_kind=content_type|default:"work" place=geometadata.place_name %}The geographic coverage of this {{ content_kind }} is <strong>{{ place }}</strong>.{% endblocktrans %}</p>
         {% endif %}
 
         <div class="geometadata-map-container">

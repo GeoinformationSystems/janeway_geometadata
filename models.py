@@ -138,6 +138,40 @@ class AbstractGeometadata(models.Model):
                 result.append(end)
         return result
 
+    def get_temporal_prose(self):
+        """Return prose fragments suitable for inline-sentence rendering.
+
+        Mirrors :meth:`get_temporal_display` but uses begin/end-aware
+        wording so the sidebar can build a real sentence
+        (e.g. "This preprint covers the time period from 2023-06-01 to
+        2023-08-31."). One entry per period in ``temporal_periods``.
+
+        Fragment shapes:
+
+        - both bounds → ``"from <start> to <end>"``
+        - start only  → ``"from <start> onwards"``
+        - end only    → ``"up to <end>"``
+        - neither     → omitted
+
+        Named single-bound values (e.g. ``"Holocene"``) fall through the
+        same shapes — ``"from Holocene onwards"`` reads correctly. For
+        single-value named periods that aren't meant as boundaries, the
+        author should put the same value on both bounds, which yields
+        ``"from Holocene to Holocene"``; if that ever proves awkward,
+        revisit the wording rather than the period model.
+        """
+        result = []
+        for period in self.temporal_periods or []:
+            start = period[0].strip() if period[0] else ""
+            end = period[1].strip() if period[1] else ""
+            if start and end:
+                result.append(f"from {start} to {end}")
+            elif start:
+                result.append(f"from {start} onwards")
+            elif end:
+                result.append(f"up to {end}")
+        return result
+
     def get_geometry_type(self):
         """Extract geometry type from WKT string."""
         if not self.geometry_wkt:

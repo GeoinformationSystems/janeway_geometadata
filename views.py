@@ -136,6 +136,29 @@ def _get_plugin_setting(setting_name, journal=None, repository=None):
     return logic.get_plugin_setting(setting_name, journal=journal, repository=repository)
 
 
+def _setting_number(setting, default, cast=float):
+    """Coerce a ``Setting`` / ``RepositoryPluginSetting`` value to a number,
+    falling back to ``default`` when the setting is missing, empty, or not
+    numeric.
+
+    The map templates inline these values straight into JavaScript
+    (``L.map(...).setView([{{ default_lat }}, {{ default_lng }}], …)``), so
+    rendering ``None`` produces ``setView([None, None], …)`` and Leaflet
+    fails with ``t is null`` inside ``latLngToPoint``. Always return a
+    JSON-serialisable number from the view, never a possibly-``None``
+    ``setting.value``.
+    """
+    if setting is None:
+        return default
+    value = getattr(setting, "value", None)
+    if value in (None, ""):
+        return default
+    try:
+        return cast(value)
+    except (TypeError, ValueError):
+        return default
+
+
 def _save_plugin_setting(setting_name, value, journal=None, repository=None):
     """Save a plugin setting honouring journal / repository / press scope.
 
@@ -733,9 +756,11 @@ def map_page(request):
     enable_overlap_picker = overlap_setting and overlap_setting.value == "on"
 
     template_context = {
-        "default_lat": default_lat.value if default_lat else 0,
-        "default_lng": default_lng.value if default_lng else 0,
-        "default_zoom": default_zoom.value if default_zoom else 2,
+        # Always coerce to numbers so the template never inlines ``None``
+        # into ``setView([…, …], …)`` — see _setting_number.
+        "default_lat": _setting_number(default_lat, 0),
+        "default_lng": _setting_number(default_lng, 0),
+        "default_zoom": _setting_number(default_zoom, 2, cast=int),
         "api_url": reverse("geometadata_all_api"),
         "scope": "journal" if journal else ("repository" if repository else "press"),
         "site_name": site_name,
@@ -1126,9 +1151,9 @@ def edit_article_geometadata(request, article_id):
         "article": article,
         "form": form,
         "geometadata": geometadata,
-        "default_lat": default_lat.value if default_lat else 0,
-        "default_lng": default_lng.value if default_lng else 0,
-        "default_zoom": default_zoom.value if default_zoom else 2,
+        "default_lat": _setting_number(default_lat, 0),
+        "default_lng": _setting_number(default_lng, 0),
+        "default_zoom": _setting_number(default_zoom, 2, cast=int),
     }
     template_context.update(_get_tile_config(journal=journal))
 
@@ -1175,9 +1200,9 @@ def edit_preprint_geometadata(request, preprint_id):
         "preprint": preprint,
         "form": form,
         "geometadata": geometadata,
-        "default_lat": default_lat.value if default_lat else 0,
-        "default_lng": default_lng.value if default_lng else 0,
-        "default_zoom": default_zoom.value if default_zoom else 2,
+        "default_lat": _setting_number(default_lat, 0),
+        "default_lng": _setting_number(default_lng, 0),
+        "default_zoom": _setting_number(default_zoom, 2, cast=int),
     }
     template_context.update(_get_tile_config(repository=repository))
 

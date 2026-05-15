@@ -26,49 +26,83 @@ logger = get_logger(__name__)
 
 
 def article_footer_block(context, *args, **kwargs):
-    """
-    Hook for article_footer_block - displays map on article/preprint pages.
+    """Hook for article_footer_block — displays the map on article pages.
 
-    This hook is called in:
-    - themes/*/templates/journal/article.html
-    - themes/*/templates/repository/preprint.html
+    Preprints are intentionally **not** rendered here; their map fires
+    via ``article_sidebar`` instead (so the preprint detail page shows
+    Time and Location in the sidebar, matching the journal article
+    landing page). This avoids a duplicate map when a theme fires both
+    hooks on the preprint template.
+
+    Fired by:
+    - ``themes/*/templates/journal/article.html`` (footer of the article
+      content, typically inside ``{% if article_content %}``)
+    - ``themes/*/templates/repository/preprint.html`` (legacy; kept for
+      backward compatibility with themes that don't fire
+      ``article_sidebar`` on preprints — but this function returns empty
+      for preprints regardless of where it's fired)
     """
     request = context.get("request")
     if not request:
         return ""
 
     article = context.get("article")
-    preprint = context.get("preprint")
-
     if article:
         return _render_article_map(request, article)
-    elif preprint:
-        return _render_preprint_map(request, preprint)
 
+    # Preprints route through article_sidebar instead.
     return ""
 
 
 def article_sidebar(context, *args, **kwargs):
-    """
-    Hook for article_sidebar - displays map in article sidebar.
+    """Hook for article_sidebar — displays the map in the sidebar.
 
-    Provides an alternative to article_footer_block for themes where
-    the footer hook is inside a conditional block. Only renders when
-    article_content is not present to avoid duplicate maps.
+    Renders both journal articles and repository preprints. The choice
+    of object is resolved from (in priority order):
+
+    1. The positional argument from the template
+       (``{% hook 'article_sidebar' article %}`` /
+       ``{% hook 'article_sidebar' preprint %}``).
+    2. The ``article`` / ``preprint`` template context vars.
+
+    Skipped for journal articles when ``article_content`` is in context —
+    in that case the journal template already fires
+    ``article_footer_block`` inside the article body and rendering the
+    sidebar version too would produce a duplicate map. Preprints never
+    use ``article_content``, so the sidebar always wins for them.
     """
     request = context.get("request")
     if not request:
         return ""
 
-    # Skip if article_content exists - article_footer_block will render
-    if context.get("article_content"):
-        return ""
+    # Resolve the object: prefer the positional argument, fall back to
+    # the well-known context keys.
+    obj = args[0] if args else None
+    article = preprint = None
+    if obj is not None:
+        # Avoid importing Article / Preprint at module scope (circular).
+        from submission.models import Article
+        from repository.models import Preprint
 
-    article = args[0] if args else context.get("article")
-    if not article:
-        return ""
+        if isinstance(obj, Article):
+            article = obj
+        elif isinstance(obj, Preprint):
+            preprint = obj
 
-    return _render_article_map(request, article)
+    article = article or context.get("article")
+    preprint = preprint or context.get("preprint")
+
+    if article:
+        # Skip when the article template will also render the footer map
+        # inside the article body (only journal articles set this).
+        if context.get("article_content"):
+            return ""
+        return _render_article_map(request, article)
+
+    if preprint:
+        return _render_preprint_map(request, preprint)
+
+    return ""
 
 
 def _render_article_map(request, article):
