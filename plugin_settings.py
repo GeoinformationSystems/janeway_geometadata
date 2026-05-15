@@ -18,7 +18,7 @@ DESCRIPTION = (
     "and displays interactive maps on article pages."
 )
 AUTHOR = "Daniel Nüst & KOMET Team (TU Dresden)"
-VERSION = "0.1.0"
+VERSION = "0.2.0"
 SHORT_NAME = "geometadata"
 MANAGER_URL = "geometadata_manager"
 JANEWAY_VERSION = "1.7.0"

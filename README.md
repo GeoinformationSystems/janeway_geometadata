@@ -236,12 +236,14 @@ available and disables settings that cannot function without them.
 
 ### Standard Hooks (No Changes Required)
 
-These hooks are present in all Janeway themes out of the box:
+These hooks are present in Janeway out of the box and require no template
+edits:
 
 | Hook | Purpose |
 |---|---|
-| `article_footer_block` | Display maps on article/preprint pages |
-| `nav_block` | Add navigation link to map page |
+| `article_footer_block` | Display map on **journal article** pages (preprints route through `article_sidebar`) |
+| `article_sidebar` | Display map in the article/preprint sidebar — preprints render here so the Time and Location section matches the journal article landing page |
+| `nav_block` (journal + press) | Add navigation link to journal/press map page |
 | `base_head_css` | Inject Leaflet CSS and custom styling |
 | `in_review_editor_actions` | Display link to geometadata editing in editor review workflow |
 
@@ -252,6 +254,34 @@ These hooks require adding a single line to your theme templates:
 | Hook | Template File | Purpose |
 |---|---|---|
 | `issue_footer_block` | `journal/issue_display.html` | Display aggregated map and temporal coverage on issue pages |
+| `nav_block` (repository) | `repository/nav.html` (OLH theme) | Add Map link to the **repository** main menu. The Material theme already fires this hook in its `repository/nav.html`; the OLH theme does not by default. |
+| `article_sidebar` (preprint) | `repository/preprint.html` (OLH + Material themes) | Display the Time and Location section in the preprint **sidebar** (matching the journal article landing page). Both built-in themes have been updated to fire `{% hook 'article_sidebar' preprint %}` inside their sidebar columns; third-party themes that ship their own preprint template need the same one-line addition. |
+
+### Adding the `nav_block` Hook to the OLH Repository Nav
+
+For repositories rendered with the OLH theme (or its subthemes, e.g. `clean`,
+which inherits OLH's repository templates), add the hook inside the existing
+`<ul>` in `src/themes/OLH/templates/repository/nav.html`:
+
+```django
+{% load hooks %}
+<nav>
+    <div class="top-bar" id="main-menu" style="display: block;">
+        <ul class="menu vertical medium-horizontal" data-responsive-menu="drilldown medium-dropdown">
+            <li><a href="{% url 'website_index' %}">{% trans 'Home' %}</a></li>
+            <li><a href="{% url 'repository_about' %}">{% trans 'About' %}</a></li>
+            <li><a href="{% url 'repository_list' %}">{{ request.repository.object_name_plural | capfirst }}</a></li>
+            <li><a href="{% url 'repository_subject_list' %}">{% trans 'Subjects' %}</a></li>
+            <li><a href="{% url 'repository_submit' %}">{% trans 'Submit' %} {{ request.repository.object_name }}</a></li>
+            {% hook 'nav_block' %}
+        </ul>
+    </div>
+</nav>
+```
+
+Without this, the repository-wide map page is still reachable at
+`/<repo-short-name>/plugins/geometadata/map/` but no link to it is shown
+in the main navigation.
 
 ### Adding the issue_footer_block Hook
 
@@ -365,6 +395,26 @@ Each record includes automatically-calculated bounding box fields
 queries without requiring PostGIS. A composite B-tree index on these four
 fields enables fast bounding-box intersection queries used by the API's
 spatial filtering feature.
+
+### Per-repository setting storage
+
+Core Janeway stores plugin settings as `SettingValue` rows keyed on
+`Journal`. The plugin therefore ships an additional
+`RepositoryPluginSetting` table (`(repository, setting_name, value)`,
+unique on `(repository, setting_name)`) so repositories can carry their
+own toggle state.
+
+The plugin's `logic.get_plugin_setting` / `is_setting_on` /
+`get_setting_value` consult scopes in this order:
+
+1. `journal` argument → core `SettingValue` (per-journal override).
+2. `repository` argument → `RepositoryPluginSetting` row (per-repo
+   override).
+3. Press-level default `SettingValue`.
+
+`logic.save_plugin_setting` mirrors the same routing for writes —
+per-repository writes `update_or_create` a `RepositoryPluginSetting`
+row; journal and press writes go through the core `setting_handler`.
 
 ## Translations (i18n)
 
@@ -514,7 +564,12 @@ python3 manage.py load_geometadata_demo --journal-code=geodemo
 # Include placeholder PDF galleys
 python3 manage.py load_geometadata_demo --create-journal --with-galleys
 
-# Clear existing demo articles before loading
+# Also create the demo repository + preprints (versions, promotion links,
+# mixed-stage preprints)
+python3 manage.py load_geometadata_demo --create-journal --with-preprints
+
+# Clear existing demo articles before loading (only affects articles;
+# preprints, versions, and promotion links are upserted idempotently)
 python3 manage.py load_geometadata_demo --journal-code=geodemo --clear-existing
 ```
 
@@ -526,7 +581,9 @@ python3 manage.py load_geometadata_demo --journal-code=geodemo --clear-existing
 | `--create-journal` | off | Create the demo journal from `demo_journal.json` if it doesn't exist |
 | `--owner-email` | `admin@example.com` | Email of user to be set as article owner |
 | `--with-galleys` | off | Attach a placeholder PDF galley to each article |
-| `--clear-existing` | off | Delete existing demo articles before loading (matches by title prefix) |
+| `--with-preprints` | off | Also create the demo repository and preprints from `demo_preprints.json` (covers the full WKT palette plus version history, preprint→article promotion links, and mixed-stage examples) |
+| `--clear-existing` | off | Delete existing demo articles before loading (matches by title prefix). Does *not* clear preprints — preprint loading is fully idempotent and refreshes existing rows in place |
+| `--skip-settings` | off | Don't override the plugin settings on the target journal |
 
 **What gets created:**
 
@@ -535,6 +592,23 @@ python3 manage.py load_geometadata_demo --journal-code=geodemo --clear-existing
 - **18 articles** with titles, abstracts, authors, and keywords
 - **Geographic metadata**: WKT geometries (points, polygons, multipoints) and place names
 - **Temporal metadata**: Various historical and modern time periods
+- **Repository** (when using `--with-preprints`): "Geometadata Demo Repository" (`geo-repo`)
+  - **16 preprints** covering the full WKT palette (Point, LineString,
+    Polygon, Polygon-with-hole, MultiPoint, MultiLineString, MultiPolygon,
+    GeometryCollection, antimeridian-crossing polygon, etc.)
+  - **Version history**: two preprints (`Urban heat-island sensors deployed in
+    Berlin` and `Continental-scale habitat suitability for European bison`)
+    carry an explicit v1 → v2 history with refined titles/abstracts. Every
+    other preprint receives an implicit v1 so theme templates that read
+    `preprint.current_version` always have a row to render.
+  - **Promotion linkage**: two preprints (`Crowdsourced air-temperature
+    monitoring across central Europe: preliminary PALM evaluation` and
+    `pIRIR dating of volcanic sediments from Sulawesi: a preliminary report`)
+    are linked via `Preprint.article` to the journal articles they were
+    later published as.
+  - **Mixed-stage examples**: two preprints (`Sea-ice extent in the Beaufort
+    Gyre`, `Urban tree canopy survey in Curitiba, Brazil`) live in
+    `STAGE_PREPRINT_REVIEW` so the repository moderation queue isn't empty.
 
 **Demo data files:**
 
@@ -543,7 +617,25 @@ python3 manage.py load_geometadata_demo --journal-code=geodemo --clear-existing
 | `test/data/demo_journal.json` | Journal metadata (name, code, settings) |
 | `test/data/demo_issues.json` | Issue metadata (volume, number, title, description) |
 | `test/data/demo_articles.json` | Article data with authors, keywords, and geometadata |
+| `test/data/demo_preprints.json` | Repository + preprint data, including optional per-entry `versions`, `linked_article_title`, and `stage` fields |
 | `test/data/placeholder.pdf` | Placeholder PDF for galleys |
+
+**Preprint JSON schema extensions** (all optional, additive on top of the
+core preprint fields):
+
+- `stage`: one of `preprint_published` (default), `preprint_review`,
+  `preprint_unsubmitted`, `preprint_rejected`. Maps to the
+  `repository.models` stage constants. Non-published preprints are not
+  visible to anonymous users.
+- `linked_article_title`: title of an existing journal Article to bind to
+  this preprint via `Preprint.article`. Resolved by exact match, falling
+  back to a `title__startswith` lookup on the first 80 characters. Logs
+  a warning if nothing matches.
+- `versions`: list of `{version, date_time, title, abstract, notes}`
+  objects, each materialised as a `PreprintVersion` row. Per-version
+  geometadata is intentionally not stored at the moment; tracked as a
+  separate follow-up because it requires a `PreprintGeometadata` schema
+  change.
 
 These JSON files can be customized or extended with additional test data.
 The default demo journal "Delta Quadrant Journal" (code: `dqj`) is configured
