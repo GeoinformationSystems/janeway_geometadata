@@ -47,6 +47,7 @@ DEMO_PLUGIN_SETTINGS = {
     "embed_geojson_link": "on",
     "embed_iso19139": "on",
     "embed_wkt": "on",
+    "enable_overlap_picker": "on",
 }
 
 

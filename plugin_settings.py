@@ -68,6 +68,8 @@ _DEFAULT_ON_EMBEDDING_SETTINGS = (
     "embed_geojson_link",
     "embed_wkt",
     "embed_iso19139",
+    # Display/interaction defaults that should converge across upgrades.
+    "enable_overlap_picker",
 )
 
 
@@ -195,6 +197,24 @@ def install():
     setting_handler.get_or_create_default_setting(setting, default_value="2")
 
     # Setting: Enable aggregated map page (scoped by context)
+    setting, _ = core_models.Setting.objects.get_or_create(
+        name="enable_overlap_picker",
+        group=setting_group,
+        defaults={
+            "pretty_name": "Enable Overlap Picker on Aggregated Maps",
+            "types": "boolean",
+            "description": (
+                "When a map click hits multiple article geometries at the "
+                "same location, open a paginated popup that lets the reader "
+                "page through every overlapping article. Off: standard "
+                "Leaflet popup behaviour (only one article visible at a "
+                "time)."
+            ),
+            "is_translatable": False,
+        },
+    )
+    setting_handler.get_or_create_default_setting(setting, default_value="on")
+
     setting, _ = core_models.Setting.objects.get_or_create(
         name="enable_map",
         group=setting_group,

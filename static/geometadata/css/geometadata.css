@@ -178,3 +178,62 @@
         min-height: 300px;
     }
 }
+
+/* ------------------------------------------------------------------ */
+/* Overlap picker — paginated popup for clicks that hit multiple
+ * features at the same location (issue #14).
+ * ------------------------------------------------------------------ */
+.geometadata-overlap-leaflet-popup .leaflet-popup-content {
+    margin: 10px 14px;
+}
+.geometadata-overlap-popup {
+    font-size: 13px;
+    line-height: 1.45;
+}
+.geometadata-overlap-header {
+    /* Stack prev / counter / next vertically. Each <button> spans the
+     * full popup width so the click target is unambiguous regardless of
+     * popup width or zoom. */
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding-bottom: 8px;
+    margin-bottom: 8px;
+    /* The 1px line separating the pagination chrome from the article body. */
+    border-bottom: 1px solid #c0c4c8;
+}
+.geometadata-overlap-counter {
+    text-align: center;
+    font-size: 12px;
+    color: #555;
+}
+.geometadata-overlap-prev,
+.geometadata-overlap-next {
+    display: block;
+    width: 100%;
+    background: #f3f4f6;
+    color: #2c3e50;
+    border: 1px solid #d0d4d8;
+    border-radius: 3px;
+    padding: 4px 0;
+    /* Stronger typography on the chevrons so the pagination is the most
+     * obvious affordance in the popup. */
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    text-align: center;
+}
+.geometadata-overlap-prev:hover,
+.geometadata-overlap-next:hover {
+    background: #e8eaee;
+    border-color: #b8bdc2;
+}
+.geometadata-overlap-prev:focus,
+.geometadata-overlap-next:focus {
+    outline: 2px solid #4a90e2;
+    outline-offset: 1px;
+}
+.geometadata-overlap-body {
+    word-wrap: break-word;
+}

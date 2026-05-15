@@ -244,6 +244,9 @@ def issue_footer_block(context, *args, **kwargs):
         "show_download_geojson": logic.is_setting_on(
             "show_download_geojson", journal=journal
         ),
+        "enable_overlap_picker": logic.is_setting_on(
+            "enable_overlap_picker", journal=journal
+        ),
         "feature_colour": logic.get_article_map_colour(journal=journal),
         "feature_opacity": logic.get_feature_opacity(journal=journal),
     }

@@ -113,6 +113,7 @@ disabled, Schema.org output omits `temporalCoverage` but still includes
 | Schema.org Coverage (JSON-LD) | on | Embed Schema.org `spatialCoverage`/`temporalCoverage` as JSON-LD |
 | GeoJSON Link Element | off | Include a `<link rel="alternate" type="application/geo+json">` to the GeoJSON API endpoint |
 | ISO 19139 XML | on | Embed an ISO 19139 `gmd:EX_Extent` fragment (geographic bounding box, geographic description, and one `gml:TimePeriod` per temporal period) inside a `<script type="application/xml" id="geometadata-iso19139">` block |
+| Enable Overlap Picker on Aggregated Maps | on | When a click on the journal/press/issue map hits multiple article geometries at the same location, open a paginated popup that lets readers page through all overlapping articles with prev/next buttons (and ArrowLeft / ArrowRight / Escape keys). When off, only the topmost article's popup opens — Leaflet's default behaviour. |
 
 ### Map Colour Coding
 
@@ -626,6 +627,21 @@ export JANEWAY_SETTINGS_MODULE=core.janeway_global_settings
 
 pytest plugins/geometadata/tests/e2e/ -v
 ```
+
+By default the live test server binds to an OS-assigned free port — fine for
+CI and most local runs. If you happen to be running a non-test development
+server (e.g. `make janeway` on 8000) and want the test server pinned to a
+known port to avoid edge-case clashes, export `GEOMETADATA_E2E_PORT`:
+
+```bash
+GEOMETADATA_E2E_PORT=9001 \
+    DB_VENDOR=sqlite JANEWAY_SETTINGS_MODULE=core.janeway_global_settings \
+    pytest plugins/geometadata/tests/e2e/ -v
+```
+
+The env var maps to Django's standard `DJANGO_LIVE_TEST_SERVER_ADDRESS`
+under the hood. Tests address the server through `base_url`, never a
+hardcoded host:port — so changing the port doesn't require touching tests.
 
 **Run E2E tests with visible browser** (useful for debugging or following along):
 

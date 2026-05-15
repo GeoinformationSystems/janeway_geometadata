@@ -62,9 +62,32 @@ class GeometadataLiveServerTestCase(StaticLiveServerTestCase):
     Data is pre-populated by ``_create_test_data()`` before the server
     starts, so that Django's URL configuration (which loads plugin URLs
     at import time) discovers the installed geometadata plugin.
+
+    Port selection
+    --------------
+    The live server's port is configurable via ``GEOMETADATA_E2E_PORT``
+    (or, equivalently, Django's standard ``DJANGO_LIVE_TEST_SERVER_ADDRESS``).
+    When neither is set, ``StaticLiveServerTestCase`` lets the OS assign a
+    free port — fine for CI and most local runs, but if you happen to be
+    running a non-test development server (e.g. ``make janeway`` on 8000)
+    and want to pin the test server to a known port for debugging, export
+    ``GEOMETADATA_E2E_PORT=9001`` (or any free port that's not your dev
+    server's). Tests address the server via ``base_url``, which is derived
+    from ``live_server_url`` — never hardcode 8000.
     """
 
     host = "localhost"
+
+    @classmethod
+    def _resolve_test_port(cls):
+        """Return an explicit port override, or None for OS-assigned."""
+        port = os.environ.get("GEOMETADATA_E2E_PORT")
+        if not port:
+            return None
+        try:
+            return int(port)
+        except (TypeError, ValueError):
+            return None
 
     @classmethod
     def setUpClass(cls):
@@ -112,9 +135,26 @@ class GeometadataLiveServerTestCase(StaticLiveServerTestCase):
             temporal_periods=[["2020-01-01", "2021-12-31"]],
         )
 
-        # Create issue with the article
+        # Second article with a polygon that *contains* the Berlin point so
+        # a click at (13.4, 52.5) hits both — the overlap-picker test relies
+        # on this geometric overlap.
+        cls.article_overlap = helpers.create_article(cls.journal, with_author=True)
+        cls.article_overlap.stage = "Published"
+        cls.article_overlap.date_published = "2024-02-01"
+        cls.article_overlap.title = "Overlap test polygon (Germany)"
+        cls.article_overlap.save()
+
+        cls.geometadata_overlap = ArticleGeometadata.objects.create(
+            article=cls.article_overlap,
+            geometry_wkt="POLYGON((5.87 47.27, 15.04 47.27, 15.04 55.06, 5.87 55.06, 5.87 47.27))",
+            place_name="Germany",
+            admin_units="Germany",
+            temporal_periods=[["2024-01-01", "2024-12-31"]],
+        )
+
+        # Create issue with both articles
         cls.issue = helpers.create_issue(
-            cls.journal, vol=1, number=1, articles=[cls.article]
+            cls.journal, vol=1, number=1, articles=[cls.article, cls.article_overlap]
         )
 
     @classmethod
@@ -167,6 +207,19 @@ def live_server(django_db_blocker):
         verbosity=0,
         interactive=False,
     )
+    # Honor an explicit port override before spinning up the live server.
+    # StaticLiveServerTestCase reads DJANGO_LIVE_TEST_SERVER_ADDRESS at class
+    # setup time (it parses "host:port"), so we only need to set the env var
+    # when the user has chosen a specific port. Otherwise the OS picks one
+    # and the server runs on a free port that won't clash with whatever else
+    # is on 8000 / 9000 / etc.
+    explicit_port = GeometadataLiveServerTestCase._resolve_test_port()
+    _restore_env = None
+    if explicit_port is not None:
+        _restore_env = os.environ.get("DJANGO_LIVE_TEST_SERVER_ADDRESS")
+        os.environ["DJANGO_LIVE_TEST_SERVER_ADDRESS"] = (
+            f"localhost:{explicit_port}"
+        )
     try:
         server = GeometadataLiveServerTestCase("run")
         server.setUpClass()
@@ -193,6 +246,13 @@ def live_server(django_db_blocker):
     finally:
         teardown_databases(db_cfg, verbosity=0)
         django_db_blocker.restore()
+        # Restore the env var so we don't leak the override into subsequent
+        # test sessions that share the same process (e.g. pytest --pdb).
+        if explicit_port is not None:
+            if _restore_env is None:
+                os.environ.pop("DJANGO_LIVE_TEST_SERVER_ADDRESS", None)
+            else:
+                os.environ["DJANGO_LIVE_TEST_SERVER_ADDRESS"] = _restore_env
 
 
 @pytest.fixture(scope="session")
@@ -211,6 +271,12 @@ def journal(live_server):
 def article(live_server):
     """Return the test article with geometadata."""
     return live_server.article
+
+
+@pytest.fixture(scope="session")
+def article_overlap(live_server):
+    """Return the second test article whose polygon contains article's point."""
+    return live_server.article_overlap
 
 
 @pytest.fixture(scope="session")

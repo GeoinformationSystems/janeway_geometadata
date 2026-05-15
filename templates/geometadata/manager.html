@@ -120,6 +120,18 @@
                         </p>
                     </div>
                 </div>
+                <div class="row">
+                    <div class="large-6 columns">
+                        <label>
+                            <input type="checkbox" name="enable_overlap_picker"
+                                   {% if settings.enable_overlap_picker == 'on' %}checked{% endif %}>
+                            {% trans "Enable Overlap Picker on Aggregated Maps" %}
+                        </label>
+                        <p class="help-text">
+                            {% trans "When a click on the journal/press/issue map hits multiple article geometries at the same location, open a paginated popup to page through every overlapping article. Off: standard Leaflet popup behaviour (only one article visible at a time)." %}
+                        </p>
+                    </div>
+                </div>
 
                 <hr>
 

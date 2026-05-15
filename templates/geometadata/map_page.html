@@ -67,6 +67,7 @@
 <script src="{% static 'geometadata/js/leaflet-providers.js' %}"></script>
 <script src="{% static 'geometadata/js/leaflet.fullscreen.js' %}"></script>
 <script src="{% static 'geometadata/js/geometadata-display.js' %}"></script>
+<script src="{% static 'geometadata/js/geometadata-overlap.js' %}"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         var mapContainer = document.getElementById('geometadata-fullmap');
@@ -76,10 +77,14 @@
         var colourGroupProp = '{{ colour_group_prop|default:"" }}';
         var paletteUrl = '{% url "geometadata_colour_palette_api" %}';
         var featureOpacity = {{ feature_opacity|default:"0.7" }};
+        var enableOverlapPicker = {{ enable_overlap_picker|yesno:"true,false" }};
 
         // i18n strings
         var i18nUntitled = '{% trans "Untitled" %}';
         var i18nView = '{% trans "View" %}';
+        var i18nOverlapCounter = '{% trans "{i} of {n} articles" %}';
+        var i18nOverlapPrev = '{% trans "Previous article" %}';
+        var i18nOverlapNext = '{% trans "Next article" %}';
 
         // Initialize map
         var map = L.map('geometadata-fullmap', {
@@ -88,6 +93,9 @@
             [{{ default_lat }}, {{ default_lng }}],
             {{ default_zoom }}
         );
+        // Expose for E2E tests — see tests/e2e/test_maps.py. Harmless in
+        // production: this is just a handle, not an extra DOM element.
+        window.geometadataMap = map;
 
         // Add zoom control
         L.control.zoom({
@@ -173,6 +181,23 @@
 
             var colourMap = buildColourMap(palette, data.features, colourGroupProp);
 
+            // Bookkeeping for the overlap picker.
+            var articleLayersMap = new Map();
+            var articleMetaMap = new Map();
+
+            function buildPopupHtml(props) {
+                var html = '<strong>' + (props.title || i18nUntitled) + '</strong>';
+                if (props.journal) {
+                    html += '<br><em>' + props.journal + '</em>';
+                } else if (props.repository) {
+                    html += '<br><em>' + props.repository + '</em>';
+                }
+                if (props.issue) html += '<br>' + props.issue;
+                if (props.place_name) html += '<br>' + props.place_name;
+                if (props.url) html += '<br><a href="' + props.url + '">' + i18nView + '</a>';
+                return html;
+            }
+
             var geojsonLayer = L.geoJSON(data, {
                 style: function(feature) {
                     var c = getColour(feature, colourMap);
@@ -186,26 +211,81 @@
                     });
                 },
                 onEachFeature: function(feature, layer) {
-                    if (feature.properties) {
-                        var popupContent = '<strong>' + (feature.properties.title || i18nUntitled) + '</strong>';
-                        if (feature.properties.journal) {
-                            popupContent += '<br><em>' + feature.properties.journal + '</em>';
-                        } else if (feature.properties.repository) {
-                            popupContent += '<br><em>' + feature.properties.repository + '</em>';
-                        }
-                        if (feature.properties.issue) {
-                            popupContent += '<br>' + feature.properties.issue;
-                        }
-                        if (feature.properties.place_name) {
-                            popupContent += '<br>' + feature.properties.place_name;
-                        }
-                        if (feature.properties.url) {
-                            popupContent += '<br><a href="' + feature.properties.url + '">{% trans "View" %}</a>';
-                        }
-                        layer.bindPopup(popupContent);
+                    if (!feature.properties) return;
+                    var popupHtml = buildPopupHtml(feature.properties);
+                    layer.bindPopup(popupHtml);
+                    // Track for overlap picker. Use type+id as the key so an
+                    // article and a preprint with the same numeric id don't
+                    // collide on the press-wide map.
+                    var props = feature.properties;
+                    var typedId = (props.type || 'feature') + ':' + (props.id != null ? props.id : '');
+                    if (!articleLayersMap.has(typedId)) articleLayersMap.set(typedId, []);
+                    articleLayersMap.get(typedId).push(layer);
+                    if (!articleMetaMap.has(typedId)) {
+                        articleMetaMap.set(typedId, {
+                            popupHtml: popupHtml,
+                            layers: articleLayersMap.get(typedId),
+                            properties: props
+                        });
                     }
                 }
             }).addTo(map);
+
+            // Highlight callbacks for the overlap manager — bump weight +
+            // fill on all layers belonging to the active article.
+            function setActiveStyle(layers) {
+                if (!layers) return;
+                for (var i = 0; i < layers.length; i++) {
+                    var layer = layers[i];
+                    if (typeof layer.setStyle !== 'function') continue;
+                    if (!layer._geometadataOriginalStyle) {
+                        layer._geometadataOriginalStyle = {
+                            weight: layer.options.weight,
+                            fillOpacity: layer.options.fillOpacity,
+                            opacity: layer.options.opacity
+                        };
+                    }
+                    layer.setStyle({
+                        weight: 4,
+                        opacity: 1,
+                        fillOpacity: Math.min(featureOpacity + 0.2, 1.0)
+                    });
+                    if (typeof layer.bringToFront === 'function') layer.bringToFront();
+                }
+            }
+            function resetActiveStyle(layers) {
+                if (!layers) return;
+                for (var i = 0; i < layers.length; i++) {
+                    var orig = layers[i]._geometadataOriginalStyle;
+                    if (orig && typeof layers[i].setStyle === 'function') {
+                        layers[i].setStyle(orig);
+                    }
+                }
+            }
+
+            // Instantiate overlap picker only when there's something to overlap.
+            if (
+                enableOverlapPicker
+                && articleLayersMap.size > 1
+                && typeof window.geometadata_createOverlapManager === 'function'
+            ) {
+                window.geometadata_createOverlapManager(map, {
+                    articleLayersMap: articleLayersMap,
+                    getArticleMeta: function (id) { return articleMetaMap.get(String(id)) || null; },
+                    highlight: function (id) { setActiveStyle((articleMetaMap.get(String(id)) || {}).layers); },
+                    resetHighlight: function (id) { resetActiveStyle((articleMetaMap.get(String(id)) || {}).layers); },
+                    i18n: {
+                        counter: i18nOverlapCounter,
+                        prev: i18nOverlapPrev,
+                        next: i18nOverlapNext
+                    }
+                });
+                // Manager owns clicks now — unbind the per-layer popups so a
+                // click on an overlap doesn't fight a layer-level popup.
+                geojsonLayer.eachLayer(function (layer) {
+                    if (layer.unbindPopup) layer.unbindPopup();
+                });
+            }
 
             // Set the layer on the zoom-all control
             zoomAllControl.setGeoJSONLayer(geojsonLayer);

@@ -21,6 +21,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `<meta name="DC.SpatialCoverage" scheme="WKT" content="...">` alongside
   the existing GeoJSON variant. The DC schema link is now emitted whenever
   any DC-style tag (DC or WKT) is enabled. Closes #27.
+- **Overlap picker** on aggregated maps (journal/press/issue). When a map
+  click hits multiple article geometries at the same location, open a
+  paginated popup with wrap-around prev/next chrome (and ArrowLeft /
+  ArrowRight / Escape keyboard navigation) so readers can page through
+  every overlapping article. Geometry hit-testing supports Point /
+  LineString / Polygon (with holes) / Multi* / GeometryCollection in pixel
+  space, so the click target matches the visible footprint at every zoom
+  level. Adapted from the OJS geoMetadata plugin's
+  `js/lib/map_overlap.js` (with the marker / line-string hit-test fixes
+  from [PR #162 commit `d486562`](https://github.com/TIBHannover/geoMetadata/commit/d486562)),
+  itself inspired by OPTIMAP's `MapInteractionManager`. Controlled by a
+  new `enable_overlap_picker` plugin setting (default on); when off, the
+  standard Leaflet popup behaviour is used. Closes #14.
 
 ### Changed
 

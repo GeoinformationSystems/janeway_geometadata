@@ -87,16 +87,28 @@ class TestJournalMapPage:
     def test_map_page_marker_shows_popup_on_click(
         self, page: Page, base_url: str, journal, article, geometadata, map_selectors
     ):
-        """Clicking a marker opens a popup with article info."""
+        """Clicking on the map at the Berlin latlng opens a popup with
+        article info. Implementation detail: the overlap-picker manager is
+        now the click authority on aggregated maps (see TestOverlapPicker
+        for its dedicated coverage), so this test fires a synthetic click
+        on the map at the seeded article's coordinate rather than relying
+        on Playwright's pointer hit-testing through z-stacked SVG paths.
+        """
         url = f"{base_url}/plugins/geometadata/map/"
         page.goto(url, wait_until="networkidle")
 
-        # Wait for marker and click it
-        marker = page.locator(map_selectors["leaflet_marker"]).first
-        expect(marker).to_be_visible(timeout=10000)
-        marker.click()
+        # Wait for the map's exposed handle, then dispatch the click.
+        page.wait_for_function(
+            "typeof window.geometadataMap !== 'undefined'", timeout=10000
+        )
+        page.evaluate(
+            """() => window.geometadataMap.fire('click', {
+                latlng: L.latLng(52.5, 13.4)
+            })"""
+        )
 
-        # Popup should appear
+        # Popup should appear (either the standard Leaflet popup or the
+        # overlap manager's paginated popup — both have .leaflet-popup).
         popup = page.locator(map_selectors["leaflet_popup"])
         expect(popup).to_be_visible(timeout=5000)
 
@@ -349,7 +361,9 @@ class TestGeoJSONDownloads:
 
         assert geojson["type"] == "FeatureCollection"
         assert "features" in geojson
-        assert len(geojson["features"]) == 1  # One article in issue with geometadata
+        # Two articles in issue have geometadata (the Berlin point + the
+        # overlap-test polygon containing it).
+        assert len(geojson["features"]) == 2
 
     def test_journal_geojson_download(
         self, page: Page, base_url: str, journal, geometadata
@@ -369,7 +383,8 @@ class TestGeoJSONDownloads:
 
         assert geojson["type"] == "FeatureCollection"
         assert "features" in geojson
-        assert len(geojson["features"]) == 1  # One article in journal with geometadata
+        # Two articles in journal have geometadata.
+        assert len(geojson["features"]) == 2
 
     def test_geojson_features_have_required_structure(
         self, page: Page, base_url: str, article, geometadata
@@ -393,3 +408,274 @@ class TestGeoJSONDownloads:
 
         # Properties should exist (detailed validation in unit tests)
         assert isinstance(feature["properties"], dict)
+
+
+# ---------------------------------------------------------------------------
+# Overlap picker (issue #14) — paginated popup for clicks that hit multiple
+# features at the same location. Mirrors the structure of the OJS plugin's
+# Cypress coverage (66-overlap-popup.cy.js).
+# ---------------------------------------------------------------------------
+
+
+def _wait_for_overlap_globals(page: Page):
+    """Wait until geometadata-overlap.js has populated its window globals."""
+    page.wait_for_function(
+        "typeof window.geometadata_findOverlappingArticles === 'function'",
+        timeout=10000,
+    )
+
+
+class TestOverlapHelpers:
+    """Pure-helper tests — drive the geometry hit-test functions directly via
+    page.evaluate. No real overlap fixtures needed; this is the analogue of
+    the 'pure helpers' Cypress tests in the OJS plugin."""
+
+    def test_point_in_ring_basic_square(self, page: Page, base_url: str, journal):
+        page.goto(f"{base_url}/plugins/geometadata/map/", wait_until="networkidle")
+        _wait_for_overlap_globals(page)
+        # Square ring around (0,0) of half-width 5
+        ring = [[-5, -5], [5, -5], [5, 5], [-5, 5], [-5, -5]]
+        result = page.evaluate(
+            """([ring]) => ({
+                inside: window.geometadata_pointInRing({lat:0,lng:0}, ring),
+                outside: window.geometadata_pointInRing({lat:10,lng:10}, ring),
+            })""",
+            [ring],
+        )
+        assert result == {"inside": True, "outside": False}
+
+    def test_point_in_polygon_with_hole(self, page: Page, base_url: str, journal):
+        page.goto(f"{base_url}/plugins/geometadata/map/", wait_until="networkidle")
+        _wait_for_overlap_globals(page)
+        # Outer ring [-10,10]; inner hole [-2,2]. Point at (0,0) is in the hole.
+        polygon = [
+            [[-10, -10], [10, -10], [10, 10], [-10, 10], [-10, -10]],
+            [[-2, -2], [2, -2], [2, 2], [-2, 2], [-2, -2]],
+        ]
+        result = page.evaluate(
+            """([poly]) => ({
+                in_outer_only: window.geometadata_pointInPolygon({lat:8,lng:8}, poly),
+                in_hole: window.geometadata_pointInPolygon({lat:0,lng:0}, poly),
+                outside: window.geometadata_pointInPolygon({lat:20,lng:20}, poly),
+            })""",
+            [polygon],
+        )
+        assert result == {"in_outer_only": True, "in_hole": False, "outside": False}
+
+    def test_point_on_marker_uses_pixel_tolerance(
+        self, page: Page, base_url: str, journal
+    ):
+        page.goto(f"{base_url}/plugins/geometadata/map/", wait_until="networkidle")
+        _wait_for_overlap_globals(page)
+        page.wait_for_function("typeof window.map !== 'undefined' || true")
+        # Pin a known zoom/centre so pixel distances are deterministic.
+        result = page.evaluate(
+            """() => {
+                const map = document.querySelector('#geometadata-fullmap')
+                    && document.querySelector('#geometadata-fullmap')._leaflet_map
+                    || (window.L && window.L.Map && Object.values(L.Map._instances || {})[0]);
+                // Fallback: find any leaflet map on the page
+                let mapInst = null;
+                for (const k in window) {
+                    if (window[k] && window[k] instanceof L.Map) { mapInst = window[k]; break; }
+                }
+                // The page's inline JS keeps the map in a closure, so build a
+                // throwaway one in the same DOM for the helper test.
+                const div = document.createElement('div');
+                div.style.cssText = 'width:400px;height:400px;position:absolute;left:-9999px;';
+                document.body.appendChild(div);
+                const m = L.map(div, { zoomControl: false, attributionControl: false });
+                m.setView([52.37, 8.43], 4);
+                const out = {
+                    centre_hits: window.geometadata_pointOnMarker(m, L.latLng(52.37, 8.43), [8.43, 52.37]),
+                    far_misses: window.geometadata_pointOnMarker(m, L.latLng(52.37, 8.43), [9.43, 52.37]),
+                };
+                m.remove();
+                document.body.removeChild(div);
+                return out;
+            }"""
+        )
+        assert result == {"centre_hits": True, "far_misses": False}
+
+    def test_geometry_collection_dispatches_to_children(
+        self, page: Page, base_url: str, journal
+    ):
+        page.goto(f"{base_url}/plugins/geometadata/map/", wait_until="networkidle")
+        _wait_for_overlap_globals(page)
+        # GeometryCollection containing one Polygon + one Point — hit either.
+        geom = {
+            "type": "GeometryCollection",
+            "geometries": [
+                {
+                    "type": "Polygon",
+                    "coordinates": [
+                        [[-5, -5], [5, -5], [5, 5], [-5, 5], [-5, -5]],
+                    ],
+                },
+                {"type": "Point", "coordinates": [50, 50]},
+            ],
+        }
+        result = page.evaluate(
+            """([geom]) => {
+                const div = document.createElement('div');
+                div.style.cssText = 'width:400px;height:400px;position:absolute;left:-9999px;';
+                document.body.appendChild(div);
+                const m = L.map(div, { zoomControl: false, attributionControl: false });
+                m.setView([0, 0], 4);
+                const out = {
+                    inside_polygon: window.geometadata_geometryContainsPoint(m, geom, L.latLng(0, 0)),
+                    on_point:       window.geometadata_geometryContainsPoint(m, geom, L.latLng(50, 50)),
+                    far_outside:    window.geometadata_geometryContainsPoint(m, geom, L.latLng(80, 80)),
+                };
+                m.remove();
+                document.body.removeChild(div);
+                return out;
+            }""",
+            [geom],
+        )
+        assert result == {
+            "inside_polygon": True,
+            "on_point": True,
+            "far_outside": False,
+        }
+
+
+class TestOverlapPicker:
+    """Integration tests for the paginated popup on the journal map."""
+
+    def _open_journal_map(self, page: Page, base_url: str):
+        page.goto(f"{base_url}/plugins/geometadata/map/", wait_until="networkidle")
+        _wait_for_overlap_globals(page)
+        # Wait for the GeoJSON layer to render at least one path.
+        page.wait_for_selector(".leaflet-overlay-pane path.leaflet-interactive", timeout=10000)
+
+    def _click_at_berlin(self, page: Page):
+        """Click the Berlin (13.4, 52.5) latlng — both seeded articles overlap there."""
+        # Use the inline map's click event directly. The page's map handle isn't
+        # exposed, so dispatch a synthetic click on the layer matching the marker.
+        page.evaluate(
+            """() => {
+                // Find the leaflet map instance attached to the fullmap container.
+                const cont = document.getElementById('geometadata-fullmap');
+                let m = null;
+                for (const k in cont) {
+                    if (k.startsWith('_leaflet_id')) {
+                        // Walk Leaflet's instance registry
+                        for (const id in L.DomUtil._domEvents || {}) { /* noop */ }
+                    }
+                }
+                // Recover the map via the documented Leaflet API: the container
+                // has a `_leaflet_id` and L stores instances on the global.
+                m = window.L && window._geometadataMapForTests
+                    || (function () {
+                        // Fallback: poke every key on window for a Map instance.
+                        for (const k in window) {
+                            try {
+                                if (window[k] instanceof L.Map) return window[k];
+                            } catch (e) {}
+                        }
+                        return null;
+                    })();
+                if (!m) return false;
+                m.fire('click', { latlng: L.latLng(52.5, 13.4) });
+                return true;
+            }"""
+        )
+
+    def test_paginated_popup_shows_for_overlapping_features(
+        self, page: Page, base_url: str, journal, article, article_overlap
+    ):
+        """Click at Berlin → paginated popup with prev/next chrome appears."""
+        self._open_journal_map(page, base_url)
+
+        # Fire a synthetic click on the live map at the Berlin latlng. The
+        # overlap manager listens to map.on('click') and is the click
+        # authority once it's instantiated.
+        page.evaluate(
+            """() => {
+                if (window.geometadataMap) {
+                    window.geometadataMap.fire('click', {
+                        latlng: L.latLng(52.5, 13.4)
+                    });
+                }
+            }"""
+        )
+
+        # Paginated popup chrome must be visible.
+        page.wait_for_selector(".geometadata-overlap-header", timeout=5000)
+        counter = page.locator(".geometadata-overlap-counter").first
+        expect(counter).to_be_visible()
+        expect(counter).to_contain_text("1")
+        expect(counter).to_contain_text("2")
+
+        ensure_screenshot_dir()
+        page.screenshot(
+            path=SCREENSHOTS_DIR / "overlap_paginated_popup.png", full_page=True
+        )
+
+    def test_next_button_advances_and_wraps(
+        self, page: Page, base_url: str, journal, article, article_overlap
+    ):
+        """Pressing Next advances the counter, wraps around at the end."""
+        self._open_journal_map(page, base_url)
+        page.evaluate(
+            """() => {
+                if (window.geometadataMap) {
+                    window.geometadataMap.fire('click', {
+                        latlng: L.latLng(52.5, 13.4)
+                    });
+                }
+            }"""
+        )
+        page.wait_for_selector(".geometadata-overlap-counter", timeout=5000)
+
+        next_btn = page.locator(".geometadata-overlap-next").first
+        expect(next_btn).to_be_visible()
+        next_btn.click()
+        # Counter should now read "2 of 2".
+        counter = page.locator(".geometadata-overlap-counter").first
+        expect(counter).to_contain_text("2 of 2")
+
+        # Next again wraps around.
+        next_btn.click()
+        expect(counter).to_contain_text("1 of 2")
+
+    def test_arrow_right_advances(
+        self, page: Page, base_url: str, journal, article, article_overlap
+    ):
+        """Keyboard ArrowRight cycles through pages."""
+        self._open_journal_map(page, base_url)
+        page.evaluate(
+            """() => {
+                if (window.geometadataMap) {
+                    window.geometadataMap.fire('click', {
+                        latlng: L.latLng(52.5, 13.4)
+                    });
+                }
+            }"""
+        )
+        page.wait_for_selector(".geometadata-overlap-counter", timeout=5000)
+        page.keyboard.press("ArrowRight")
+        counter = page.locator(".geometadata-overlap-counter").first
+        expect(counter).to_contain_text("2 of 2")
+
+    def test_escape_closes_popup(
+        self, page: Page, base_url: str, journal, article, article_overlap
+    ):
+        """Escape key closes the paginated popup."""
+        self._open_journal_map(page, base_url)
+        page.evaluate(
+            """() => {
+                if (window.geometadataMap) {
+                    window.geometadataMap.fire('click', {
+                        latlng: L.latLng(52.5, 13.4)
+                    });
+                }
+            }"""
+        )
+        page.wait_for_selector(".geometadata-overlap-header", timeout=5000)
+        page.keyboard.press("Escape")
+        # Popup should be gone.
+        page.wait_for_selector(
+            ".geometadata-overlap-header", state="detached", timeout=5000
+        )

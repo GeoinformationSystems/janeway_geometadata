@@ -464,6 +464,7 @@ def manager(request):
                 "embed_geojson_link",
                 "embed_iso19139",
                 "embed_wkt",
+                "enable_overlap_picker",
                 "geocoding_enabled",
             ]
             text_settings = [
@@ -533,6 +534,7 @@ def manager(request):
         "embed_geojson_link",
         "embed_iso19139",
         "embed_wkt",
+        "enable_overlap_picker",
         "default_map_lat",
         "default_map_lng",
         "default_map_zoom",
@@ -768,6 +770,11 @@ def map_page(request):
     )
     show_download_geojson = show_download and show_download.value == "on"
 
+    overlap_setting = _get_plugin_setting(
+        "enable_overlap_picker", journal=journal, repository=repository
+    )
+    enable_overlap_picker = overlap_setting and overlap_setting.value == "on"
+
     template_context = {
         "default_lat": default_lat.value if default_lat else 0,
         "default_lng": default_lng.value if default_lng else 0,
@@ -777,6 +784,7 @@ def map_page(request):
         "site_name": site_name,
         "feature_opacity": feature_opacity,
         "show_download_geojson": show_download_geojson,
+        "enable_overlap_picker": enable_overlap_picker,
         "journal": journal,
         "repository": repository,
     }
@@ -841,6 +849,9 @@ def press_map_page(request):
         except (ValueError, TypeError):
             pass
 
+    overlap_setting = _get_plugin_setting("enable_overlap_picker")
+    enable_overlap_picker = overlap_setting and overlap_setting.value == "on"
+
     template_context = {
         "default_lat": default_lat,
         "default_lng": default_lng,
@@ -849,6 +860,7 @@ def press_map_page(request):
         "scope": "press",
         "site_name": site_name,
         "feature_opacity": feature_opacity,
+        "enable_overlap_picker": enable_overlap_picker,
     }
     template_context.update(_get_tile_config())
     template_context.update(_get_colour_config())

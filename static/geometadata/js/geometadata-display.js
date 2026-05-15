@@ -91,11 +91,17 @@
             fullscreen: mapElement.getAttribute('data-i18n-fullscreen') || 'Full Screen',
             exitFullscreen: mapElement.getAttribute('data-i18n-exit-fullscreen') || 'Exit Full Screen',
             viewLink: mapElement.getAttribute('data-i18n-view') || 'View',
-            resetView: mapElement.getAttribute('data-i18n-reset-view') || 'Reset map view'
+            resetView: mapElement.getAttribute('data-i18n-reset-view') || 'Reset map view',
+            overlapCounter: mapElement.getAttribute('data-i18n-overlap-counter') || '{i} of {n} articles',
+            overlapPrev: mapElement.getAttribute('data-i18n-overlap-prev') || 'Previous article',
+            overlapNext: mapElement.getAttribute('data-i18n-overlap-next') || 'Next article'
         };
 
         // Check if popups should be disabled (e.g., for single article maps)
         var disablePopup = mapElement.getAttribute('data-disable-popup') === 'true';
+        // Overlap picker can be disabled at journal/repository level via setting.
+        var enableOverlapPicker =
+            mapElement.getAttribute('data-enable-overlap-picker') !== 'false';
 
         // Initialize the map
         var map = L.map(mapElementId, {
@@ -123,6 +129,12 @@
 
         // Parse and add GeoJSON data if available
         var geoLayer = null;
+        // Map<articleId, layer[]> — populated by onEachFeature so the overlap
+        // picker can find every layer belonging to an article (a single article
+        // may have multiple Leaflet layers, e.g. an antimeridian-split MultiPolygon).
+        var articleLayersMap = new Map();
+        // Map<articleId, {popupHtml, layers, originalStyles, properties}>
+        var articleMetaMap = new Map();
         if (geojsonData) {
             try {
                 var geojson = JSON.parse(geojsonData);
@@ -170,6 +182,23 @@
                         if (!disablePopup) {
                             bindFeaturePopup(feature, layer, i18n);
                         }
+                        // Track article -> layer(s) for the overlap picker.
+                        var props = feature.properties || {};
+                        var articleId = props.id != null ? props.id : props._featureKey;
+                        if (articleId == null) return;
+                        var key = String(articleId);
+                        if (!articleLayersMap.has(key)) articleLayersMap.set(key, []);
+                        articleLayersMap.get(key).push(layer);
+                        // Snapshot the popup HTML once — the overlap manager
+                        // re-renders the same content inside its paginated
+                        // popup, so it must not be regenerated per click.
+                        if (!articleMetaMap.has(key)) {
+                            articleMetaMap.set(key, {
+                                popupHtml: buildPopupContent(props, i18n) || '',
+                                layers: articleLayersMap.get(key),
+                                properties: props
+                            });
+                        }
                     }
                 }).addTo(map);
 
@@ -188,7 +217,84 @@
             }
         }
 
-        return { map: map, geoLayer: geoLayer };
+        // Instantiate the overlap picker on aggregated maps that have more
+        // than one article — only there can clicks ever resolve to overlaps.
+        // The article-level map runs with disablePopup=true and never
+        // populates articleLayersMap (single-feature path stays untouched).
+        var overlapManager = null;
+        if (
+            !disablePopup
+            && enableOverlapPicker
+            && articleLayersMap.size > 1
+            && typeof window.geometadata_createOverlapManager === 'function'
+        ) {
+            overlapManager = window.geometadata_createOverlapManager(map, {
+                articleLayersMap: articleLayersMap,
+                getArticleMeta: function (articleId) {
+                    return articleMetaMap.get(String(articleId)) || null;
+                },
+                highlight: function (articleId) {
+                    setActiveStyle(articleLayersMap.get(String(articleId)), featureOpacity);
+                },
+                resetHighlight: function (articleId) {
+                    resetActiveStyle(articleLayersMap.get(String(articleId)));
+                },
+                i18n: {
+                    counter: i18n.overlapCounter,
+                    prev: i18n.overlapPrev,
+                    next: i18n.overlapNext
+                }
+            });
+            // The geoJSON layers each have a layer-level popup bound by
+            // onEachFeature, but the overlap manager is now the click
+            // authority. Unbind those layer popups so a click on an
+            // overlap area doesn't fight a per-layer popup that opens
+            // from L.geoJSON's default layer click handler.
+            if (geoLayer) {
+                geoLayer.eachLayer(function (layer) {
+                    if (layer.unbindPopup) layer.unbindPopup();
+                });
+            }
+        }
+
+        return { map: map, geoLayer: geoLayer, overlapManager: overlapManager };
+    }
+
+    /**
+     * Bump the visible weight + fill on every layer of an article so the
+     * currently-paged feature stands out without changing its palette colour.
+     */
+    function setActiveStyle(layers, baseOpacity) {
+        if (!layers) return;
+        for (var i = 0; i < layers.length; i++) {
+            var layer = layers[i];
+            if (typeof layer.setStyle !== 'function') continue;
+            // Snapshot the original style once so we can restore it.
+            if (!layer._geometadataOriginalStyle) {
+                layer._geometadataOriginalStyle = {
+                    weight: layer.options.weight,
+                    fillOpacity: layer.options.fillOpacity,
+                    opacity: layer.options.opacity
+                };
+            }
+            layer.setStyle({
+                weight: 4,
+                opacity: 1,
+                fillOpacity: Math.min((baseOpacity || 0.7) + 0.2, 1.0)
+            });
+            if (typeof layer.bringToFront === 'function') layer.bringToFront();
+        }
+    }
+
+    function resetActiveStyle(layers) {
+        if (!layers) return;
+        for (var i = 0; i < layers.length; i++) {
+            var layer = layers[i];
+            var orig = layer._geometadataOriginalStyle;
+            if (orig && typeof layer.setStyle === 'function') {
+                layer.setStyle(orig);
+            }
+        }
     }
 
     /**
