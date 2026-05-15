@@ -271,7 +271,7 @@ class Command(BaseCommand):
         """Turn on the geometadata plugin settings for the demo journal.
 
         Without these explicit overrides the journal-level SettingValue rows
-        default to empty strings, which `is_setting_on` treats as off — so
+        default to empty strings, which ``is_setting_on`` treats as off, so
         embedded HTML metadata and on-page maps would not render.
         """
         plugin = plugin_settings.get_self()
@@ -298,9 +298,9 @@ class Command(BaseCommand):
     def _configure_repository_plugin_settings(self, repository):
         """Mirror DEMO_PLUGIN_SETTINGS into the per-repository store.
 
-        With ``RepositoryPluginSetting`` in place, demo repositories
-        carry their own toggle state rather than relying on the
-        press-level fallback. The set of settings mirrored is exactly
+        With ``RepositoryPluginSetting`` in place (migration 0003), demo
+        repositories carry their own toggle state rather than relying on
+        the press-level fallback. The set of settings mirrored is exactly
         ``DEMO_PLUGIN_SETTINGS`` — the same toggles the demo journal
         receives — so the demo repository's behaviour matches the demo
         journal's.
@@ -556,6 +556,14 @@ class Command(BaseCommand):
 
         return galley
 
+    # JSON `stage` value → repository.models stage constant.
+    _PREPRINT_STAGE_MAP = {
+        "preprint_unsubmitted": "preprint_unsubmitted",
+        "preprint_review": "preprint_review",
+        "preprint_published": "preprint_published",
+        "preprint_rejected": "preprint_rejected",
+    }
+
     # Shared on-disk location for the demo placeholder PDF inside
     # PreprintFile's storage backend. All demo PreprintFile rows point
     # at the same path so the git repo only ships
@@ -591,14 +599,17 @@ class Command(BaseCommand):
     def _load_demo_preprints(self, owner):
         """Create demo repository and preprints from demo_preprints.json.
 
-        Idempotent: re-running won't duplicate the repository, and preprints
-        with existing matching titles are skipped.
+        Idempotent: repository / subject / preprint / author / version /
+        geometadata / promotion-link rows are all upserted, so a re-run
+        is a safe no-op for unchanged data and only writes deltas for
+        rows added to the JSON since the last run.
         """
         from press.models import Press
         from repository.models import (
             Preprint,
             PreprintAuthor,
             PreprintFile,
+            PreprintVersion,
             Repository,
             STAGE_PREPRINT_PUBLISHED,
             Subject,
@@ -664,29 +675,55 @@ class Command(BaseCommand):
             )
 
         created_count = 0
+        updated_count = 0
         for preprint_data in data["preprints"]:
             title = preprint_data["title"]
-            if Preprint.objects.filter(repository=repository, title=title).exists():
-                self.stdout.write(f"  Skipping existing preprint: {title[:60]}...")
-                continue
-
             submitted = self._parse_datetime(preprint_data.get("date_submitted"))
-            preprint = Preprint.objects.create(
-                repository=repository,
-                owner=owner,
-                title=title,
-                abstract=preprint_data.get("abstract", ""),
-                stage=STAGE_PREPRINT_PUBLISHED,
-                comments_editor="",
-                date_submitted=submitted or timezone.now(),
-                date_published=submitted,
-                date_accepted=submitted,
+            stage = self._PREPRINT_STAGE_MAP.get(
+                preprint_data.get("stage", "preprint_published"),
+                STAGE_PREPRINT_PUBLISHED,
             )
-            preprint.subject.add(subject)
+            published = submitted if stage == STAGE_PREPRINT_PUBLISHED else None
 
-            # Author records — get-or-create an Account per author so that
-            # multi-author preprints don't collapse to the same fallback
-            # account (PreprintAuthor has unique(account, preprint)).
+            preprint, created = Preprint.objects.get_or_create(
+                repository=repository,
+                title=title,
+                defaults={
+                    "owner": owner,
+                    "abstract": preprint_data.get("abstract", ""),
+                    "stage": stage,
+                    "comments_editor": "",
+                    "date_submitted": submitted or timezone.now(),
+                    "date_published": published,
+                    "date_accepted": published,
+                },
+            )
+            if created:
+                preprint.subject.add(subject)
+
+                # Submission file. All demo PreprintFile rows reference
+                # the same on-disk placeholder PDF (copied once into
+                # storage by `_demo_pdf_storage_path`), so the git repo
+                # only carries the single test/data/placeholder.pdf and
+                # download-link clicks don't 500 with "no file
+                # associated".
+                shared_pdf_path = self._demo_pdf_storage_path(PreprintFile)
+                preprint_file = PreprintFile.objects.create(
+                    preprint=preprint,
+                    file=shared_pdf_path,
+                    original_filename=f"{repository.short_name}-{preprint.pk}.pdf",
+                    mime_type="application/pdf",
+                    size=self._demo_pdf_size(PreprintFile),
+                )
+                preprint.submission_file = preprint_file
+                preprint.save()
+                created_count += 1
+                self.stdout.write(f"  Created preprint: {title[:60]}...")
+            else:
+                self.stdout.write(f"  Using existing preprint: {title[:60]}...")
+
+            # Authors — always upsert so newly-added authors in the JSON
+            # land on existing preprints on re-run.
             for i, author_data in enumerate(preprint_data.get("authors", []), start=1):
                 author_account = self._get_or_create_demo_author_account(author_data)
                 PreprintAuthor.objects.get_or_create(
@@ -698,21 +735,7 @@ class Command(BaseCommand):
                     },
                 )
 
-            # Submission file. All demo PreprintFile rows reference the
-            # same on-disk placeholder PDF (copied once into storage by
-            # `_demo_pdf_storage_path`), so the git repo only carries the
-            # single test/data/placeholder.pdf and download-link clicks
-            # don't 500 with "no file associated".
-            preprint_file = PreprintFile.objects.create(
-                preprint=preprint,
-                file=shared_pdf_path,
-                original_filename=f"{repository.short_name}-{preprint.pk}.pdf",
-                mime_type="application/pdf",
-                size=shared_pdf_size,
-            )
-            preprint.submission_file = preprint_file
-            preprint.save()
-
+            # Geometadata — current/published state.
             geo_data = preprint_data.get("geometadata", {})
             if geo_data:
                 temporal_periods = geo_data.get("temporal_periods", [])
@@ -726,12 +749,123 @@ class Command(BaseCommand):
                     },
                 )
 
-            created_count += 1
-            self.stdout.write(f"  Created preprint: {title[:60]}...")
+            # PreprintVersion rows. Every preprint gets at least an
+            # implicit v1 (mirrors real submissions and avoids None
+            # `current_version` references in repository templates such
+            # as the OLH theme's preprint.html, which unconditionally
+            # renders `preprint.current_version.date_time|date_human`).
+            versions_data = preprint_data.get("versions") or [
+                {
+                    "version": 1,
+                    "date_time": preprint_data.get("date_submitted"),
+                    "title": preprint.title,
+                    "abstract": preprint_data.get("abstract", ""),
+                }
+            ]
+            self._create_preprint_versions(
+                preprint, versions_data, repository, PreprintFile, PreprintVersion
+            )
+
+            # Article promotion link — set Preprint.article to an existing
+            # journal Article by title match. Self-healing across reruns:
+            # if --clear-existing wiped the article and recreated it with
+            # a new PK, this re-binds to the fresh row.
+            linked_title = preprint_data.get("linked_article_title")
+            if linked_title:
+                self._link_preprint_to_article(preprint, linked_title)
+
+            if not created:
+                updated_count += 1
 
         self.stdout.write(
-            self.style.SUCCESS(f"Successfully created {created_count} demo preprints")
+            self.style.SUCCESS(
+                f"Successfully created {created_count} demo preprints "
+                f"({updated_count} already present and refreshed)"
+            )
         )
+
+    def _create_preprint_versions(
+        self, preprint, versions_data, repository, preprint_file_cls, preprint_version_cls
+    ):
+        """Create or refresh PreprintVersion rows from the JSON `versions` list.
+
+        Per-version PreprintFile rows are stubbed with a derived filename so
+        re-runs are idempotent. The version's `title` and `abstract` are
+        per-version overrides supported by the core PreprintVersion model;
+        per-version geometadata is intentionally not stored yet (a follow-up
+        commit will add a PreprintVersion FK to PreprintGeometadata).
+        """
+        for v_data in versions_data:
+            version_number = v_data["version"]
+            date_time = (
+                self._parse_datetime(v_data.get("date_time")) or timezone.now()
+            )
+            version_title = v_data.get("title", preprint.title) or preprint.title
+            version_abstract = v_data.get("abstract", preprint.abstract) or ""
+
+            shared_pdf_path = self._demo_pdf_storage_path(preprint_file_cls)
+            shared_pdf_size = self._demo_pdf_size(preprint_file_cls)
+            version_file, _ = preprint_file_cls.objects.get_or_create(
+                preprint=preprint,
+                original_filename=(
+                    f"{repository.short_name}-{preprint.pk}-v{version_number}.pdf"
+                ),
+                defaults={
+                    "file": shared_pdf_path,
+                    "mime_type": "application/pdf",
+                    "size": shared_pdf_size,
+                },
+            )
+            # Heal pre-existing version files that were created before
+            # the shared-placeholder fix (file=='' would still 500 on
+            # download).
+            if not version_file.file:
+                version_file.file = shared_pdf_path
+                version_file.size = shared_pdf_size
+                version_file.save(update_fields=["file", "size"])
+
+            preprint_version_cls.objects.update_or_create(
+                preprint=preprint,
+                version=version_number,
+                defaults={
+                    "file": version_file,
+                    "date_time": date_time,
+                    "title": version_title,
+                    "abstract": version_abstract,
+                },
+            )
+
+    def _link_preprint_to_article(self, preprint, article_title):
+        """Set `Preprint.article` to the journal Article with this title.
+
+        Matches exactly (Article.title == article_title); falls back to a
+        startswith match against the first 80 characters if no exact hit.
+        Logs a warning and leaves the link unchanged when nothing matches.
+        """
+        from submission.models import Article
+
+        article = Article.objects.filter(title=article_title).first()
+        if not article:
+            article = Article.objects.filter(
+                title__startswith=article_title[:80]
+            ).first()
+
+        if not article:
+            self.stdout.write(
+                self.style.WARNING(
+                    f"  No article matching {article_title[:60]!r} for "
+                    f"promotion link on preprint {preprint.pk}"
+                )
+            )
+            return
+
+        if preprint.article_id != article.pk:
+            preprint.article = article
+            preprint.save(update_fields=["article"])
+            self.stdout.write(
+                f"  Linked preprint {preprint.pk} -> article {article.pk} "
+                f"({article.title[:50]}...)"
+            )
 
     def _clear_existing_demo_articles(self, journal):
         """Clear existing demo articles (articles from demo issues)."""

@@ -13,7 +13,7 @@
   "preprints": [
     {
       "title": "Urban heat-island sensors deployed in Berlin (Point)",
-      "abstract": "A point-located preprint demonstrating Point WKT coverage for a single sensor field in Berlin, Germany.",
+      "abstract": "A point-located preprint demonstrating Point WKT coverage for a single sensor field in Berlin, Germany. Version 2 expanded the original pilot site at Alexanderplatz to a multi-site campaign across central Berlin districts.",
       "date_submitted": "2024-06-15",
       "keywords": ["urban climate", "Berlin", "sensors", "Point"],
       "authors": [
@@ -24,7 +24,23 @@
         "admin_units": "Berlin, Germany",
         "geometry_wkt": "POINT(13.4050 52.5200)",
         "temporal_periods": [["2023-06-01", "2023-08-31"]]
-      }
+      },
+      "versions": [
+        {
+          "version": 1,
+          "date_time": "2024-06-15",
+          "title": "Urban heat-island pilot sensor at Berlin Alexanderplatz",
+          "abstract": "Pilot deployment of a single low-cost air-temperature sensor at Berlin Alexanderplatz, covering summer 2023. Preliminary observations only.",
+          "notes": "v1 reported a single pilot sensor location. Geometry refinement deferred to the per-version-geometadata schema change."
+        },
+        {
+          "version": 2,
+          "date_time": "2024-09-01",
+          "title": "Urban heat-island sensors deployed in Berlin (Point)",
+          "abstract": "A point-located preprint demonstrating Point WKT coverage for a single sensor field in Berlin, Germany. Version 2 expanded the original pilot site at Alexanderplatz to a multi-site campaign across central Berlin districts.",
+          "notes": "v2 added three additional sensor sites; current PreprintGeometadata reflects the post-refinement footprint."
+        }
+      ]
     },
     {
       "title": "Coastal walking transect from Sydney to Botany Bay (LineString)",
@@ -43,7 +59,7 @@
     },
     {
       "title": "Continental-scale habitat suitability for European bison (Polygon)",
-      "abstract": "Continental polygon coverage demonstrating broad-scale spatial extent.",
+      "abstract": "Continental polygon coverage demonstrating broad-scale spatial extent. Version 2 tightened the study area to the realised range across Central and Eastern Europe.",
       "date_submitted": "2024-07-10",
       "keywords": ["biogeography", "Europe", "Polygon", "habitat"],
       "authors": [
@@ -54,7 +70,23 @@
         "admin_units": "Europe",
         "geometry_wkt": "POLYGON((-10 35, 40 35, 40 70, -10 70, -10 35))",
         "temporal_periods": [["1990-01-01", "2024-12-31"]]
-      }
+      },
+      "versions": [
+        {
+          "version": 1,
+          "date_time": "2024-07-10",
+          "title": "Habitat suitability for European bison: continental bounding box (Polygon)",
+          "abstract": "Initial submission with a coarse rectangular bounding box covering all of Europe to scope the modelling exercise.",
+          "notes": "v1 used a coarse rectangular bounding box. Geometry refinement deferred."
+        },
+        {
+          "version": 2,
+          "date_time": "2024-10-12",
+          "title": "Continental-scale habitat suitability for European bison (Polygon)",
+          "abstract": "Continental polygon coverage demonstrating broad-scale spatial extent. Version 2 tightened the study area to the realised range across Central and Eastern Europe.",
+          "notes": "v2 refined the polygon to the realised European bison range; current PreprintGeometadata reflects the refined extent."
+        }
+      ]
     },
     {
       "title": "Land use mosaic with enclave reserve (Polygon with hole)",
@@ -190,6 +222,70 @@
         "admin_units": "Svalbard, Norway",
         "geometry_wkt": "POLYGON((10 76, 30 76, 30 81, 10 81, 10 76))",
         "temporal_periods": [["2010-01-01", ""]]
+      }
+    },
+    {
+      "title": "Crowdsourced air-temperature monitoring across central Europe: preliminary PALM evaluation",
+      "abstract": "Preprint version of an evaluation study for the PALM urban microscale model using a crowdsourced air-temperature dataset. The same work was subsequently submitted to and published in the journal.",
+      "date_submitted": "2024-04-01",
+      "keywords": ["crowdsourcing", "PALM", "air temperature", "central Europe"],
+      "authors": [
+        {"first_name": "Hannah", "last_name": "Weiss", "email": "hannah.weiss@example.com", "affiliation": "Karlsruhe Institute of Technology"}
+      ],
+      "linked_article_title": "Crowdsourcing air temperature data for the evaluation of the urban microscale model PALM - a case study in central Europe",
+      "geometadata": {
+        "place_name": "Central Europe",
+        "admin_units": "Germany; Austria; Czech Republic",
+        "geometry_wkt": "POLYGON((6 47, 17 47, 17 55, 6 55, 6 47))",
+        "temporal_periods": [["2022-06-01", "2023-08-31"]]
+      }
+    },
+    {
+      "title": "pIRIR dating of volcanic sediments from Sulawesi: a preliminary report",
+      "abstract": "Preprint version of preliminary pIRIR dating results from Sulawesi volcanic sediments, later published as a journal article with expanded analyses.",
+      "date_submitted": "2024-05-10",
+      "keywords": ["pIRIR", "luminescence dating", "volcanic sediments", "Sulawesi"],
+      "authors": [
+        {"first_name": "Putu", "last_name": "Wirawan", "email": "putu.wirawan@example.com", "affiliation": "Institut Teknologi Bandung"}
+      ],
+      "linked_article_title": "Survival of the brightest: pIRIR dating of volcanic sediments in Sulawesi, Indonesia, using micro-aliquots of K-rich feldspar",
+      "geometadata": {
+        "place_name": "Sulawesi, Indonesia",
+        "admin_units": "Sulawesi, Indonesia",
+        "geometry_wkt": "POINT(119.8707 -1.4296)",
+        "temporal_periods": [["2018-01-01", "2022-12-31"]]
+      }
+    },
+    {
+      "title": "Sea-ice extent in the Beaufort Gyre (Polygon, under review)",
+      "abstract": "Preprint currently in the moderation queue. Polygon coverage over the Beaufort Gyre study area.",
+      "date_submitted": "2025-04-02",
+      "stage": "preprint_review",
+      "keywords": ["sea ice", "Arctic", "Beaufort Gyre", "Polygon"],
+      "authors": [
+        {"first_name": "Inuk", "last_name": "Lyngmark", "email": "inuk.lyngmark@example.com", "affiliation": "Aarhus University"}
+      ],
+      "geometadata": {
+        "place_name": "Beaufort Gyre, Arctic Ocean",
+        "admin_units": "International waters",
+        "geometry_wkt": "POLYGON((-160 70, -130 70, -130 80, -160 80, -160 70))",
+        "temporal_periods": [["2018-01-01", "2024-12-31"]]
+      }
+    },
+    {
+      "title": "Urban tree canopy survey in Curitiba, Brazil (Point, under review)",
+      "abstract": "Preprint currently in the moderation queue. Point-located survey of street trees in central Curitiba.",
+      "date_submitted": "2025-04-20",
+      "stage": "preprint_review",
+      "keywords": ["urban forestry", "Curitiba", "tree canopy", "Point"],
+      "authors": [
+        {"first_name": "Beatriz", "last_name": "Pires", "email": "beatriz.pires@example.com", "affiliation": "Universidade Federal do Paraná"}
+      ],
+      "geometadata": {
+        "place_name": "Curitiba, Brazil",
+        "admin_units": "Paraná, Brazil",
+        "geometry_wkt": "POINT(-49.2733 -25.4284)",
+        "temporal_periods": [["2024-03-01", "2024-11-30"]]
       }
     }
   ]
