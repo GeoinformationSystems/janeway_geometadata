@@ -165,6 +165,41 @@ def is_setting_on(setting_name, journal=None, repository=None, default=True):
 
 
 # =============================================================================
+# Preprint geometadata resolution
+# =============================================================================
+
+
+def get_current_geometadata(preprint):
+    """Return the canonical ``PreprintGeometadata`` row to display for
+    ``preprint``.
+
+    Resolution order:
+
+    1. The row for ``preprint.current_version`` (if the preprint has a
+       current version and a matching row exists).
+    2. The row with ``preprint_version=None`` (legacy / canonical slot).
+    3. ``None``.
+
+    Used by display surfaces (preprint sidebar map, embedded HTML
+    metadata, API endpoint) and by the edit-metadata view to decide
+    which row to bind the form to.
+    """
+    from plugins.geometadata.models import PreprintGeometadata
+
+    cv = getattr(preprint, "current_version", None)
+    if cv is not None:
+        row = PreprintGeometadata.objects.filter(
+            preprint=preprint, preprint_version=cv
+        ).first()
+        if row is not None:
+            return row
+
+    return PreprintGeometadata.objects.filter(
+        preprint=preprint, preprint_version=None
+    ).first()
+
+
+# =============================================================================
 # Display Configuration Helpers
 # =============================================================================
 

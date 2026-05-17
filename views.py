@@ -544,9 +544,15 @@ def manager(request):
 
         article_count = 0
         total_article_count = 0
-        preprint_count = PreprintGeometadata.objects.filter(
-            preprint__repository=repository
-        ).count()
+        # Count distinct preprints that have any geometadata row, not the
+        # number of geometadata rows — under the per-version schema one
+        # preprint can have several rows (one per version + legacy).
+        preprint_count = (
+            PreprintGeometadata.objects.filter(preprint__repository=repository)
+            .values("preprint")
+            .distinct()
+            .count()
+        )
         total_preprint_count = Preprint.objects.filter(repository=repository).count()
         has_journal = False
         has_repository = True
@@ -556,7 +562,9 @@ def manager(request):
 
         article_count = ArticleGeometadata.objects.count()
         total_article_count = Article.objects.count()
-        preprint_count = PreprintGeometadata.objects.count()
+        preprint_count = (
+            PreprintGeometadata.objects.values("preprint").distinct().count()
+        )
         total_preprint_count = Preprint.objects.count()
         # Show sections based on whether content exists
         has_journal = total_article_count > 0
@@ -650,11 +658,16 @@ def curation_queue(request):
         from repository.models import Preprint
 
         preprints = Preprint.objects.filter(repository=repository)
+        # Build a "any row has spatial/temporal data" lookup. With per-version
+        # geometadata one preprint can have several rows; OR them so the
+        # curation queue reports True if any version (incl. legacy) carries
+        # content.
         geo_lookup = {}
         for gm in PreprintGeometadata.objects.filter(
             preprint__repository=repository,
         ):
-            geo_lookup[gm.preprint_id] = gm.has_spatial_data() or gm.has_temporal_data()
+            has_data = gm.has_spatial_data() or gm.has_temporal_data()
+            geo_lookup[gm.preprint_id] = geo_lookup.get(gm.preprint_id, False) or has_data
 
         for preprint in preprints.order_by("-date_published", "-pk"):
             all_items.append(
@@ -899,18 +912,19 @@ def preprint_geometadata_api(request, preprint_id):
     if repository and preprint.repository != repository:
         return JsonResponse({"error": "Preprint not found"}, status=404)
 
-    try:
-        geometadata = PreprintGeometadata.objects.get(preprint=preprint)
-        geojson = geometadata.to_geojson()
-        if geojson:
-            # Add preprint metadata to properties
-            geojson["properties"]["title"] = preprint.title
-            geojson["properties"]["url"] = preprint.local_url
-            geojson["properties"]["id"] = preprint.pk
-            return JsonResponse(geojson)
-        return JsonResponse({"error": "No geometry data"}, status=404)
-    except PreprintGeometadata.DoesNotExist:
+    from plugins.geometadata import logic as geo_logic
+
+    geometadata = geo_logic.get_current_geometadata(preprint)
+    if geometadata is None:
         return JsonResponse({"error": "No geometadata"}, status=404)
+    geojson = geometadata.to_geojson()
+    if geojson:
+        # Add preprint metadata to properties
+        geojson["properties"]["title"] = preprint.title
+        geojson["properties"]["url"] = preprint.local_url
+        geojson["properties"]["id"] = preprint.pk
+        return JsonResponse(geojson)
+    return JsonResponse({"error": "No geometry data"}, status=404)
 
 
 @require_http_methods(["GET"])
@@ -961,18 +975,33 @@ def all_geometadata_api(request):
                 features.append(geojson)
 
     elif repository:
-        # Get all preprint geometadata for this repository
-        geometadata_qs = (
-            PreprintGeometadata.objects.filter(
-                preprint__repository=repository,
-                geometry_wkt__isnull=False,
-            )
-            .exclude(geometry_wkt="")
-            .select_related("preprint")
-        )
-        geometadata_qs = _apply_bbox_filter(geometadata_qs, request)
+        # Resolve one geometadata row per preprint via the plugin's
+        # current-version resolution rule. Under the per-version schema a
+        # preprint may carry several rows; the aggregated map only wants
+        # the displayed/current one.
+        from repository.models import Preprint
+        from plugins.geometadata import logic as geo_logic
 
-        for gm in geometadata_qs:
+        rows_by_pk = {}
+        for p in Preprint.objects.filter(repository=repository):
+            gm = geo_logic.get_current_geometadata(p)
+            if gm and gm.geometry_wkt:
+                rows_by_pk[gm.pk] = gm
+
+        if rows_by_pk:
+            filtered_qs = _apply_bbox_filter(
+                PreprintGeometadata.objects.filter(pk__in=rows_by_pk.keys()).exclude(
+                    geometry_wkt=""
+                ),
+                request,
+            )
+            keep_ids = set(filtered_qs.values_list("pk", flat=True))
+        else:
+            keep_ids = set()
+
+        for gm in rows_by_pk.values():
+            if gm.pk not in keep_ids:
+                continue
             geojson = gm.to_geojson()
             if geojson:
                 geojson["properties"]["title"] = gm.preprint.title
@@ -1068,17 +1097,32 @@ def press_geometadata_api(request):
             geojson["properties"]["journal"] = gm.article.journal.name
             features.append(geojson)
 
-    # All preprint geometadata across all repositories
-    preprint_qs = (
-        PreprintGeometadata.objects.filter(
-            geometry_wkt__isnull=False,
-        )
-        .exclude(geometry_wkt="")
-        .select_related("preprint", "preprint__repository")
-    )
-    preprint_qs = _apply_bbox_filter(preprint_qs, request)
+    # All preprint geometadata across all repositories. Resolve one row
+    # per preprint via the current-version rule so the press map shows
+    # the displayed/current footprint, not every historical version.
+    from repository.models import Preprint
+    from plugins.geometadata import logic as geo_logic
 
-    for gm in preprint_qs:
+    preprint_rows_by_pk = {}
+    for p in Preprint.objects.all():
+        gm = geo_logic.get_current_geometadata(p)
+        if gm and gm.geometry_wkt:
+            preprint_rows_by_pk[gm.pk] = gm
+
+    if preprint_rows_by_pk:
+        preprint_qs = _apply_bbox_filter(
+            PreprintGeometadata.objects.filter(
+                pk__in=preprint_rows_by_pk.keys()
+            ).exclude(geometry_wkt=""),
+            request,
+        )
+        keep_ids = set(preprint_qs.values_list("pk", flat=True))
+    else:
+        keep_ids = set()
+
+    for gm in preprint_rows_by_pk.values():
+        if gm.pk not in keep_ids:
+            continue
         geojson = gm.to_geojson()
         if geojson:
             geojson["properties"]["title"] = gm.preprint.title
@@ -1179,8 +1223,15 @@ def edit_preprint_geometadata(request, preprint_id):
         messages.error(request, _("Preprint not found."))
         return redirect("core_dashboard")
 
-    # Get or create geometadata
-    geometadata, created = PreprintGeometadata.objects.get_or_create(preprint=preprint)
+    # Bind to the row that matches the preprint's current version, so the
+    # form edits the same row the sidebar / API surfaces display. Falls
+    # back to the legacy `preprint_version=None` slot when there is no
+    # current version (e.g. preprints with no PreprintVersion rows yet).
+    target_version = getattr(preprint, "current_version", None)
+    geometadata, created = PreprintGeometadata.objects.get_or_create(
+        preprint=preprint,
+        preprint_version=target_version,
+    )
 
     if request.method == "POST":
         form = PreprintGeometadataForm(request.POST, instance=geometadata)

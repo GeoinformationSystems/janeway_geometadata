@@ -31,14 +31,24 @@
           "date_time": "2024-06-15",
           "title": "Urban heat-island pilot sensor at Berlin Alexanderplatz",
           "abstract": "Pilot deployment of a single low-cost air-temperature sensor at Berlin Alexanderplatz, covering summer 2023. Preliminary observations only.",
-          "notes": "v1 reported a single pilot sensor location. Geometry refinement deferred to the per-version-geometadata schema change."
+          "geometadata": {
+            "place_name": "Berlin Alexanderplatz, Germany",
+            "admin_units": "Berlin, Germany",
+            "geometry_wkt": "POINT(13.4133 52.5219)",
+            "temporal_periods": [["2023-06-01", "2023-08-31"]]
+          }
         },
         {
           "version": 2,
           "date_time": "2024-09-01",
           "title": "Urban heat-island sensors deployed in Berlin (Point)",
           "abstract": "A point-located preprint demonstrating Point WKT coverage for a single sensor field in Berlin, Germany. Version 2 expanded the original pilot site at Alexanderplatz to a multi-site campaign across central Berlin districts.",
-          "notes": "v2 added three additional sensor sites; current PreprintGeometadata reflects the post-refinement footprint."
+          "geometadata": {
+            "place_name": "Central Berlin districts, Germany",
+            "admin_units": "Berlin, Germany",
+            "geometry_wkt": "MULTIPOINT((13.4133 52.5219), (13.3777 52.5163), (13.4280 52.4960), (13.4050 52.5200))",
+            "temporal_periods": [["2023-06-01", "2024-08-31"]]
+          }
         }
       ]
     },
@@ -77,14 +87,24 @@
           "date_time": "2024-07-10",
           "title": "Habitat suitability for European bison: continental bounding box (Polygon)",
           "abstract": "Initial submission with a coarse rectangular bounding box covering all of Europe to scope the modelling exercise.",
-          "notes": "v1 used a coarse rectangular bounding box. Geometry refinement deferred."
+          "geometadata": {
+            "place_name": "Europe (continental bounding box)",
+            "admin_units": "Europe",
+            "geometry_wkt": "POLYGON((-10 35, 40 35, 40 70, -10 70, -10 35))",
+            "temporal_periods": [["1990-01-01", "2024-12-31"]]
+          }
         },
         {
           "version": 2,
           "date_time": "2024-10-12",
           "title": "Continental-scale habitat suitability for European bison (Polygon)",
           "abstract": "Continental polygon coverage demonstrating broad-scale spatial extent. Version 2 tightened the study area to the realised range across Central and Eastern Europe.",
-          "notes": "v2 refined the polygon to the realised European bison range; current PreprintGeometadata reflects the refined extent."
+          "geometadata": {
+            "place_name": "Central and Eastern Europe (realised range)",
+            "admin_units": "Poland; Belarus; Lithuania; Ukraine; Slovakia; Romania",
+            "geometry_wkt": "POLYGON((14 47, 30 47, 32 50, 30 56, 22 57, 16 55, 14 52, 14 47))",
+            "temporal_periods": [["1990-01-01", "2024-12-31"]]
+          }
         }
       ]
     },

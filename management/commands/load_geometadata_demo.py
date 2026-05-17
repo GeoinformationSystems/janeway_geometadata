@@ -735,12 +735,16 @@ class Command(BaseCommand):
                     },
                 )
 
-            # Geometadata — current/published state.
+            # Top-level geometadata — the legacy / canonical state
+            # (``preprint_version=None``). Per-version geometadata is
+            # written inside ``_create_preprint_versions`` below when a
+            # version's JSON entry carries a ``geometadata`` block.
             geo_data = preprint_data.get("geometadata", {})
             if geo_data:
                 temporal_periods = geo_data.get("temporal_periods", [])
                 PreprintGeometadata.objects.update_or_create(
                     preprint=preprint,
+                    preprint_version=None,
                     defaults={
                         "place_name": geo_data.get("place_name", ""),
                         "admin_units": geo_data.get("admin_units", ""),
@@ -790,11 +794,17 @@ class Command(BaseCommand):
         """Create or refresh PreprintVersion rows from the JSON `versions` list.
 
         Per-version PreprintFile rows are stubbed with a derived filename so
-        re-runs are idempotent. The version's `title` and `abstract` are
-        per-version overrides supported by the core PreprintVersion model;
-        per-version geometadata is intentionally not stored yet (a follow-up
-        commit will add a PreprintVersion FK to PreprintGeometadata).
+        re-runs are idempotent. The version's ``title`` and ``abstract`` are
+        per-version overrides supported by the core ``PreprintVersion`` model.
+
+        When a version entry carries a ``geometadata`` key, a corresponding
+        ``PreprintGeometadata`` row is created/updated and bound to that
+        version via the ``preprint_version`` FK. The top-level preprint
+        ``geometadata`` block stays the legacy / canonical
+        ``preprint_version=None`` slot.
         """
+        from plugins.geometadata.models import PreprintGeometadata
+
         for v_data in versions_data:
             version_number = v_data["version"]
             date_time = (
@@ -824,7 +834,7 @@ class Command(BaseCommand):
                 version_file.size = shared_pdf_size
                 version_file.save(update_fields=["file", "size"])
 
-            preprint_version_cls.objects.update_or_create(
+            version_row, _ = preprint_version_cls.objects.update_or_create(
                 preprint=preprint,
                 version=version_number,
                 defaults={
@@ -834,6 +844,22 @@ class Command(BaseCommand):
                     "abstract": version_abstract,
                 },
             )
+
+            # Per-version geometadata, when the JSON declares one.
+            version_geo = v_data.get("geometadata")
+            if version_geo:
+                PreprintGeometadata.objects.update_or_create(
+                    preprint=preprint,
+                    preprint_version=version_row,
+                    defaults={
+                        "place_name": version_geo.get("place_name", ""),
+                        "admin_units": version_geo.get("admin_units", ""),
+                        "geometry_wkt": version_geo.get("geometry_wkt", ""),
+                        "temporal_periods": version_geo.get(
+                            "temporal_periods", []
+                        ),
+                    },
+                )
 
     def _link_preprint_to_article(self, preprint, article_title):
         """Set `Preprint.article` to the journal Article with this title.

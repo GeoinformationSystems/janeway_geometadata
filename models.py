@@ -314,22 +314,45 @@ class ArticleGeometadata(AbstractGeometadata):
 class PreprintGeometadata(AbstractGeometadata):
     """
     Geospatial and temporal metadata for repository preprints.
+
+    Per-version: each ``PreprintVersion`` can carry its own
+    ``PreprintGeometadata`` row. The ``preprint_version=None`` slot is
+    the legacy / canonical state — used by preprints that don't track
+    geometadata per-version and by deployments migrated from before the
+    per-version schema landed. Use
+    :func:`plugins.geometadata.logic.get_current_geometadata` to resolve
+    "which row to display" for a given preprint (current version row →
+    ``preprint_version=None`` row → ``None``).
     """
 
-    preprint = models.OneToOneField(
+    preprint = models.ForeignKey(
         "repository.Preprint",
         on_delete=models.CASCADE,
-        related_name="geometadata",
+        related_name="geometadata_set",
         verbose_name=_("Preprint"),
+    )
+    preprint_version = models.ForeignKey(
+        "repository.PreprintVersion",
+        on_delete=models.CASCADE,
+        related_name="geometadata",
+        null=True,
+        blank=True,
+        verbose_name=_("Preprint version"),
+        help_text=_(
+            "The PreprintVersion this geometadata describes. Leave blank "
+            "for the legacy / canonical state shared across versions."
+        ),
     )
 
     class Meta(AbstractGeometadata.Meta):
         abstract = False
         verbose_name = _("Preprint Geometadata")
         verbose_name_plural = _("Preprint Geometadata")
+        unique_together = ("preprint", "preprint_version")
 
     def __str__(self):
-        return f"Geometadata for Preprint {self.preprint.pk}"
+        v = self.preprint_version.version if self.preprint_version else "—"
+        return f"Geometadata for Preprint {self.preprint.pk} (v{v})"
 
 
 class RepositoryPluginSetting(models.Model):

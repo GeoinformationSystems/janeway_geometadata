@@ -202,11 +202,14 @@ def make_preprint_geometadata(
     temporal="modern_closed",
     place_name=None,
     admin_units="",
+    preprint_version=None,
     **overrides,
 ):
     """Create a PreprintGeometadata record from a sample kind.
 
     Mirrors :func:`make_article_geometadata` for the Preprint relation.
+    Pass ``preprint_version=<PreprintVersion>`` to attach the row to a
+    specific version; leave ``None`` for the legacy / canonical slot.
     """
     from plugins.geometadata.models import PreprintGeometadata
 
@@ -215,6 +218,7 @@ def make_preprint_geometadata(
 
     fields = {
         "preprint": preprint,
+        "preprint_version": preprint_version,
         "geometry_wkt": get_wkt(kind) if kind else "",
         "place_name": place_name or "",
         "admin_units": admin_units,

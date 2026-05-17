@@ -107,14 +107,15 @@ class ArticleGeometadataAdmin(AbstractGeometadataAdmin):
 class PreprintGeometadataAdmin(AbstractGeometadataAdmin):
     """Admin for Preprint geometadata."""
 
-    list_display = ["preprint"] + AbstractGeometadataAdmin.list_display[1:]
-    raw_id_fields = ["preprint"]
+    list_display = ["preprint", "preprint_version"] + AbstractGeometadataAdmin.list_display[1:]
+    list_filter = ("preprint_version",)
+    raw_id_fields = ["preprint", "preprint_version"]
 
     fieldsets = (
         (
             None,
             {
-                "fields": ("preprint",),
+                "fields": ("preprint", "preprint_version"),
             },
         ),
     ) + AbstractGeometadataAdmin.fieldsets

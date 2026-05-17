@@ -109,9 +109,23 @@ class GeometadataTestCase(TestCase):
 
     @classmethod
     def attach_preprint_geometadata(
-        cls, preprint, kind="point", temporal="modern_closed", **overrides
+        cls,
+        preprint,
+        kind="point",
+        temporal="modern_closed",
+        preprint_version=None,
+        **overrides,
     ):
-        """Attach a PreprintGeometadata record built from a sample kind."""
+        """Attach a PreprintGeometadata record built from a sample kind.
+
+        Pass ``preprint_version=<PreprintVersion>`` to bind the row to a
+        specific version; the default ``None`` writes to the legacy /
+        canonical slot.
+        """
         return factories.make_preprint_geometadata(
-            preprint, kind=kind, temporal=temporal, **overrides
+            preprint,
+            kind=kind,
+            temporal=temporal,
+            preprint_version=preprint_version,
+            **overrides,
         )

@@ -153,8 +153,6 @@ def _render_article_map(request, article):
 
 def _render_preprint_map(request, preprint):
     """Render map for a repository preprint."""
-    from plugins.geometadata.models import PreprintGeometadata
-
     repository = getattr(request, "repository", None)
     if not repository or not logic.is_enabled(repository=repository):
         return ""
@@ -162,9 +160,8 @@ def _render_preprint_map(request, preprint):
     if not logic.is_setting_on("show_article_map", repository=repository):
         return ""
 
-    try:
-        geometadata = PreprintGeometadata.objects.get(preprint=preprint)
-    except PreprintGeometadata.DoesNotExist:
+    geometadata = logic.get_current_geometadata(preprint)
+    if geometadata is None:
         return ""
 
     if not geometadata.has_spatial_data() and not geometadata.has_temporal_data():
@@ -481,7 +478,7 @@ def _inject_meta_tags(context, request):
     Inject geospatial and temporal meta tags into <head> on
     article/preprint detail pages.
     """
-    from plugins.geometadata.models import ArticleGeometadata, PreprintGeometadata
+    from plugins.geometadata.models import ArticleGeometadata
 
     article = context.get("article")
     preprint = context.get("preprint")
@@ -496,10 +493,7 @@ def _inject_meta_tags(context, request):
         except ArticleGeometadata.DoesNotExist:
             pass
     elif preprint:
-        try:
-            geometadata = PreprintGeometadata.objects.get(preprint=preprint)
-        except PreprintGeometadata.DoesNotExist:
-            pass
+        geometadata = logic.get_current_geometadata(preprint)
 
     if not geometadata:
         return ""

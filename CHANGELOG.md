@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Per-version preprint geometadata.** `PreprintGeometadata` gains a
+  nullable `preprint_version` FK so each `PreprintVersion` can carry its
+  own geometry and temporal periods, alongside the existing legacy /
+  canonical slot at `preprint_version=None`. `unique_together` on
+  `(preprint, preprint_version)` enforces one row per pair.
+  `logic.get_current_geometadata(preprint)` resolves which row to
+  display via the rule: current-version row → legacy row → `None`.
+  Display surfaces (sidebar map, embedded HTML metadata, JSON API
+  endpoints) and the press / repository aggregated maps all route
+  through the helper so they show the current version's footprint.
+  The edit-metadata view binds the form to the current version's row
+  (creating it on demand) so editors mutate the same row the sidebar
+  displays. Demo loader extended with a `versions[].geometadata` block
+  in `demo_preprints.json`; the Berlin sensors and European bison
+  preprints carry concrete per-version geometries showing real
+  refinement across versions. Closes #39.
+
+### Changed
+
+- `PreprintGeometadata.preprint` becomes a `ForeignKey` (was
+  `OneToOneField`); the reverse accessor on `Preprint` is renamed from
+  `.geometadata` (the OneToOne reverse-rel) to `.geometadata_set` (the
+  ForeignKey manager). Callers that need a single row should use
+  `logic.get_current_geometadata(preprint)`.
+
 ## [0.2.0] - 2026-05-15
 
 ### Added

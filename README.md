@@ -27,6 +27,7 @@ Geospatial metadata collected by this plugin and its OJS counterparts can be agg
 - **JSON API**: GeoJSON endpoints for map data retrieval
 - **Admin Integration**: Edit geometadata from article/preprint management pages
 - **Full-Page Map**: Browse all articles/preprints with geographic metadata on a single map
+- **Per-Version Preprint Geometadata**: Each `PreprintVersion` can carry its own geometry and temporal periods, so a preprint's footprint can evolve across submissions. The sidebar map, embedded HTML metadata, and JSON API surface the current version's row (with a legacy / canonical fallback for preprints that aren't tracked per-version).
 
 ## Installation
 
@@ -395,6 +396,32 @@ Each record includes automatically-calculated bounding box fields
 queries without requiring PostGIS. A composite B-tree index on these four
 fields enables fast bounding-box intersection queries used by the API's
 spatial filtering feature.
+
+### Per-version preprint geometadata
+
+`PreprintGeometadata` carries a nullable `preprint_version` FK so each
+`PreprintVersion` can record its own geometry and temporal periods.
+Rows form three layers per preprint:
+
+- **Per-version rows** (`preprint_version` set): one row per version
+  that needs its own footprint. Different versions of the same preprint
+  can have different geometries.
+- **Legacy / canonical row** (`preprint_version=None`): the
+  cross-version state. Used by preprints that aren't tracked per-version
+  and by deployments migrated from before the per-version schema.
+- Uniqueness is enforced on `(preprint, preprint_version)`.
+
+Display surfaces (preprint sidebar map, embedded HTML metadata in the
+page head, the JSON API) resolve which row to show via
+`logic.get_current_geometadata(preprint)`:
+
+1. Row for `preprint.current_version`, if it exists.
+2. Row with `preprint_version=None` (legacy slot).
+3. `None`.
+
+The edit-metadata view binds the form to the current version's row
+(creating it on demand), so editors mutate the same row the sidebar
+displays.
 
 ### Per-repository setting storage
 
